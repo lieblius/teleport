@@ -32,11 +32,14 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
 	"time"
 
+	"github.com/go-jose/go-jose/v3"
+	josejwt "github.com/go-jose/go-jose/v3/jwt"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/google/uuid"
@@ -52,6 +55,7 @@ import (
 	"github.com/gravitational/teleport/lib/cryptosuites"
 	"github.com/gravitational/teleport/lib/defaults"
 	"github.com/gravitational/teleport/lib/events"
+	"github.com/gravitational/teleport/lib/jwt"
 	"github.com/gravitational/teleport/lib/reversetunnelclient"
 	"github.com/gravitational/teleport/lib/tlsca"
 	"github.com/gravitational/teleport/lib/utils"
@@ -467,14 +471,22 @@ func setup(t *testing.T, clock *clockwork.FakeClock, authClient authclient.Clien
 }
 
 func (p *testServer) makeRequest(t *testing.T, method, endpoint string, reqBody []byte, cookies []http.Cookie) (int, string) {
+	status, body, _ := p.makeRequestWithHeaders(t, method, endpoint, reqBody, cookies, nil)
+	return status, body
+}
+
+func (p *testServer) makeRequestWithHeaders(t *testing.T, method, endpoint string, reqBody []byte, cookies []http.Cookie, headers map[string]string) (int, string, http.Header) {
 	u := url.URL{
 		Scheme: p.serverURL.Scheme,
 		Host:   p.serverURL.Host,
 		Path:   endpoint,
 	}
-	req, err := http.NewRequest(http.MethodPost, u.String(), bytes.NewBuffer(reqBody))
+	req, err := http.NewRequest(method, u.String(), bytes.NewBuffer(reqBody))
 	require.NoError(t, err)
 	req.Header.Set("Content-Type", "application/json")
+	for key, value := range headers {
+		req.Header.Set(key, value)
+	}
 
 	// Attach the cookie.
 	for _, c := range cookies {
@@ -500,7 +512,7 @@ func (p *testServer) makeRequest(t *testing.T, method, endpoint string, reqBody 
 	require.NoError(t, err)
 
 	require.NoError(t, resp.Body.Close())
-	return resp.StatusCode, string(content)
+	return resp.StatusCode, string(content), resp.Header
 }
 
 type mockAuthClient struct {
@@ -511,6 +523,7 @@ type mockAuthClient struct {
 	appServers    []types.AppServer
 	caKey         []byte
 	caCert        []byte
+	jwtSigner     crypto.Signer
 	emittedEvents []apievents.AuditEvent
 	mtx           sync.Mutex
 }
@@ -552,6 +565,37 @@ func (c *mockAuthClient) GetApplicationServers(_ context.Context, _ string) ([]t
 }
 
 func (c *mockAuthClient) GetCertAuthority(ctx context.Context, id types.CertAuthID, loadKeys bool) (types.CertAuthority, error) {
+	if id.Type == types.JWTSigner {
+		var jwtKeys []*types.JWTKeyPair
+		if c.jwtSigner != nil {
+			privateKey, err := keys.MarshalPrivateKey(c.jwtSigner)
+			if err != nil {
+				return nil, err
+			}
+			publicKey, err := keys.MarshalPublicKey(c.jwtSigner.Public())
+			if err != nil {
+				return nil, err
+			}
+			jwtKeys = []*types.JWTKeyPair{{
+				PublicKey:      publicKey,
+				PrivateKey:     privateKey,
+				PrivateKeyType: types.PrivateKeyType_RAW,
+			}}
+		}
+
+		ca, err := types.NewCertAuthority(types.CertAuthoritySpecV2{
+			Type:        types.JWTSigner,
+			ClusterName: c.clusterName,
+			ActiveKeys: types.CAKeySet{
+				JWT: jwtKeys,
+			},
+		})
+		if err != nil {
+			return nil, err
+		}
+		return ca, nil
+	}
+
 	ca, err := types.NewCertAuthority(types.CertAuthoritySpecV2{
 		Type:        types.HostCA,
 		ClusterName: c.clusterName,
@@ -567,6 +611,20 @@ func (c *mockAuthClient) GetCertAuthority(ctx context.Context, id types.CertAuth
 	}
 
 	return ca, nil
+}
+
+func (c *mockAuthClient) SignDBSCChallenge(_ context.Context, sessionID string) (string, error) {
+	key, err := jwt.New(&jwt.Config{
+		Clock:       clockwork.NewRealClock(),
+		PrivateKey:  c.jwtSigner,
+		ClusterName: c.clusterName,
+	})
+	if err != nil {
+		return "", err
+	}
+	return key.SignDBSCChallenge(jwt.DBSCChallengeParams{
+		SessionID: sessionID,
+	})
 }
 
 func (c *mockAuthClient) NewWatcher(context.Context, types.Watch) (types.Watcher, error) {
@@ -950,6 +1008,90 @@ func TestRedirectToLauncherClusterFallback(t *testing.T) {
 		want := "https://" + clusterName + ":3080/web/launch/" + appFQDN
 		require.True(t, strings.HasPrefix(loc, want), "got %s, want prefix %s", loc, want)
 	})
+}
+
+func TestDBSCRefresh(t *testing.T) {
+	t.Parallel()
+
+	fakeClock := clockwork.NewFakeClock()
+	clusterName := "test-cluster"
+	publicAddr := "app.example.com"
+
+	tlsCAKey, tlsCACert, err := tlsca.GenerateSelfSignedCA(
+		pkix.Name{CommonName: clusterName},
+		[]string{publicAddr, apiutils.EncodeClusterName(clusterName)},
+		defaults.CATTL,
+	)
+	require.NoError(t, err)
+
+	session := createAppSession(t, fakeClock, tlsCAKey, tlsCACert, clusterName, publicAddr)
+	deviceKey, err := cryptosuites.GenerateKeyWithAlgorithm(cryptosuites.ECDSAP256)
+	require.NoError(t, err)
+	deviceJWK := jose.JSONWebKey{Key: deviceKey.Public()}
+	deviceJWKJSON, err := deviceJWK.Public().MarshalJSON()
+	require.NoError(t, err)
+	session.SetDBSCPublicKey(deviceJWKJSON)
+
+	jwtSigner, err := cryptosuites.GenerateKeyWithAlgorithm(cryptosuites.ECDSAP256)
+	require.NoError(t, err)
+
+	authClient := &mockAuthClient{
+		clusterName: clusterName,
+		appSession:  session,
+		jwtSigner:   jwtSigner,
+	}
+	p := setup(t, fakeClock, authClient, nil)
+
+	headers := map[string]string{
+		secureSessionIDHeader: session.GetName(),
+	}
+	status, _, responseHeaders := p.makeRequestWithHeaders(t, http.MethodPost, dbscRefreshPath, nil, nil, headers)
+	require.Equal(t, http.StatusForbidden, status)
+
+	challengeHeader := responseHeaders.Get(secureSessionChallengeHeader)
+	require.NotEmpty(t, challengeHeader)
+	challengeValue, sessionParam, ok := strings.Cut(challengeHeader, ";id=")
+	require.True(t, ok)
+	require.Equal(t, strconv.Quote(session.GetName()), sessionParam)
+	challenge, err := strconv.Unquote(challengeValue)
+	require.NoError(t, err)
+
+	proofJWT, err := makeDBSCProofJWT(deviceKey, challenge)
+	require.NoError(t, err)
+
+	headers[secureSessionResponseHeader] = proofJWT
+	status, body, responseHeaders := p.makeRequestWithHeaders(t, http.MethodPost, dbscRefreshPath, nil, nil, headers)
+	require.Equal(t, http.StatusOK, status)
+	setCookies := responseHeaders.Values("Set-Cookie")
+	require.Len(t, setCookies, 2)
+	require.Contains(t, setCookies[0], CookieName+"="+session.GetName())
+	require.Contains(t, setCookies[0], "Max-Age=600")
+	require.Contains(t, setCookies[1], SubjectCookieName+"="+session.GetBearerToken())
+	require.Contains(t, setCookies[1], "Max-Age=600")
+
+	var got dbscSessionConfig
+	require.NoError(t, json.Unmarshal([]byte(body), &got))
+	require.Equal(t, session.GetName(), got.SessionIdentifier)
+	require.Equal(t, dbscRefreshPath, got.RefreshURL)
+	require.False(t, got.Scope.IncludeSite)
+	require.Len(t, got.Credentials, 2)
+	require.Equal(t, CookieName, got.Credentials[0].Name)
+	require.Equal(t, SubjectCookieName, got.Credentials[1].Name)
+}
+
+func makeDBSCProofJWT(deviceKey crypto.Signer, challenge string) (string, error) {
+	jwk := jose.JSONWebKey{Key: deviceKey.Public()}
+	signer, err := jose.NewSigner(jose.SigningKey{
+		Algorithm: jose.ES256,
+		Key:       deviceKey,
+	}, (&jose.SignerOptions{}).WithType("dbsc+jwt").WithHeader("jwk", jwk.Public()))
+	if err != nil {
+		return "", err
+	}
+
+	return josejwt.Signed(signer).Claims(josejwt.Claims{
+		ID: challenge,
+	}).CompactSerialize()
 }
 
 func addValidSessionCookiesToRequest(appSession types.WebSession, r *http.Request) {
