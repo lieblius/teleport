@@ -46,6 +46,7 @@ require (
 	github.com/ClickHouse/ch-go v0.69.0
 	github.com/ClickHouse/clickhouse-go/v2 v2.37.2
 	github.com/DanielTitkov/go-adaptive-cards v0.2.2
+	github.com/DataDog/datadog-agent/pkg/template v0.77.2
 	github.com/HdrHistogram/hdrhistogram-go v1.2.0
 	github.com/Masterminds/sprig/v3 v3.3.0
 	github.com/Microsoft/go-winio v0.6.2
@@ -155,6 +156,7 @@ require (
 	github.com/grafana/pyroscope-go v1.2.7
 	github.com/gravitational/license v0.0.0-20250329001817-070456fa8ec1
 	github.com/gravitational/roundtrip v1.0.3
+	github.com/gravitational/teleport/api v0.0.0-00010101000000-000000000000
 	github.com/gravitational/trace v1.5.1
 	github.com/grpc-ecosystem/go-grpc-middleware/providers/prometheus v1.1.0
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.3.3
@@ -286,8 +288,6 @@ require (
 	sigs.k8s.io/yaml v1.6.0
 	software.sslmate.com/src/go-pkcs12 v0.6.0
 )
-
-require github.com/gravitational/teleport/api v0.0.0-00010101000000-000000000000
 
 require (
 	cel.dev/expr v0.25.1 // indirect
