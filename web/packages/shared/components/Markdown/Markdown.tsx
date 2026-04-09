@@ -235,7 +235,6 @@ function parseListItems(
   startIndex: number,
   baseIndent: number,
   listType: ListType,
-  isRoot = false,
   depth = 0
 ): { node: ReactNode; endIndex: number } {
   if (depth >= MAX_LIST_DEPTH) {
@@ -248,16 +247,13 @@ function parseListItems(
   let i = startIndex;
 
   while (i < lines.length) {
-    // Skip blank lines between sibling list items so that
-    // blank-line-separated children stay in the same nested list.
-    while (i < lines.length && lines[i].trim() === '') {
+    const raw = lines[i];
+
+    if (raw.trim() === '') {
       i += 1;
-    }
-    if (i >= lines.length) {
-      break;
+      continue;
     }
 
-    const raw = lines[i];
     const trimmed = raw.trimStart();
 
     const itemType = isListItem(trimmed);
@@ -273,9 +269,7 @@ function parseListItems(
     // Capture the start number from the first ordered list item.
     if (listType === 'ol' && startNumber === undefined) {
       const num = parseInt(trimmed, 10);
-      if (num !== 1) {
-        startNumber = num;
-      }
+      startNumber = num;
     }
 
     const content = getItemContent(trimmed);
@@ -331,7 +325,6 @@ function parseListItems(
           i,
           nextIndent,
           nextType,
-          false,
           depth + 1
         );
 
@@ -355,11 +348,11 @@ function parseListItems(
   const key = `list-${startIndex}`;
   const node =
     listType === 'ol' ? (
-      <StyledOl key={key} root={isRoot} start={startNumber}>
+      <StyledOl key={key} root={depth === 0} start={startNumber}>
         {listItems}
       </StyledOl>
     ) : (
-      <StyledUl key={key} root={isRoot}>
+      <StyledUl key={key} root={depth === 0}>
         {listItems}
       </StyledUl>
     );
@@ -445,8 +438,7 @@ function processMarkdown(text: string, options: MarkdownOptions): ReactNode[] {
         lines,
         i,
         baseIndent,
-        listType,
-        true
+        listType
       );
 
       items.push(result.node);
@@ -503,11 +495,7 @@ function processMarkdown(text: string, options: MarkdownOptions): ReactNode[] {
         const hasHeader = tableSeparatorRegex.test(tableLines[1]);
         const headerCells = hasHeader ? parseRow(tableLines[0]) : [];
         const alignments = hasHeader
-          ? tableLines[1]
-              .replace(/^\|/, '')
-              .replace(/\|$/, '')
-              .split(/(?<!\\)\|/)
-              .map(getAlignment)
+          ? parseRow(tableLines[1]).map(getAlignment)
           : [];
         const dataRows = tableLines
           .slice(hasHeader ? 2 : 0)
