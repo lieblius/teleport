@@ -4405,7 +4405,7 @@ func (a *Server) CreateAuthenticateChallenge(ctx context.Context, req *proto.Cre
 	if browserMFAReq != nil && browserMFAReq.Username != username {
 		a.logger.WarnContext(
 			ctx,
-			"Stored username in MFA session does not match requestor's username",
+			"Username stored in MFA session does not match requester's username",
 			"request_id", req.BrowserMFARequestID,
 			"session_username", browserMFAReq.Username,
 			"requestor_username", username,
