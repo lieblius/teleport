@@ -311,7 +311,7 @@ func (u *HostUserManagement) updateUser(hostUser HostUser, ui *decisionpb.HostUs
 
 			log.DebugContext(ctx, "Creating home directory", "home_path", home)
 			err = u.backend.CreateHomeDirectory(home, hostUser.UID, hostUser.GID)
-			if err != nil && !os.IsExist(err) {
+			if err != nil && !trace.IsAlreadyExists(err) {
 				return trace.Wrap(err)
 			}
 		}
