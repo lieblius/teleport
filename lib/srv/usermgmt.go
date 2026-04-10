@@ -25,7 +25,6 @@ import (
 	"io"
 	"log/slog"
 	"maps"
-	"os"
 	"os/user"
 	"regexp"
 	"slices"
@@ -399,7 +398,7 @@ func (u *HostUserManagement) createUser(name string, ui *decisionpb.HostUsersInf
 		if userOpts.Home != "" {
 			log.InfoContext(u.ctx, "Attempting to create home directory", "home", userOpts.Home, "gid", userOpts.GID)
 			if err := u.backend.CreateHomeDirectory(userOpts.Home, user.Uid, user.Gid); err != nil {
-				if !os.IsExist(err) {
+				if !trace.IsAlreadyExists(err) {
 					return trace.Wrap(err)
 				}
 				log.InfoContext(u.ctx, "Home directory already exists", "home", userOpts.Home, "gid", userOpts.GID)
