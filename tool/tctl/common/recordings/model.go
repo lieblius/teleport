@@ -19,22 +19,19 @@
 package recordings
 
 import (
-	"image/color"
 	"strings"
 
-	"charm.land/bubbles/v2/help"
-	"charm.land/bubbles/v2/key"
-	"charm.land/bubbles/v2/list"
-	"charm.land/bubbles/v2/viewport"
-	tea "charm.land/bubbletea/v2"
-	"charm.land/lipgloss/v2"
+	"github.com/charmbracelet/bubbles/help"
+	"github.com/charmbracelet/bubbles/key"
+	"github.com/charmbracelet/bubbles/list"
+	"github.com/charmbracelet/bubbles/viewport"
+	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 
 	sessionsearchv1pb "github.com/gravitational/teleport/api/gen/proto/go/teleport/sessionsearch/v1"
 )
 
 // ── Shared styles ─────────────────────────────────────────────────────────────
-// Styles are rebuilt whenever a BackgroundColorMsg is received so they adapt
-// to the terminal's actual background colour.
 
 const (
 	// listWidthPercent is the fraction of the terminal width devoted to the
@@ -44,17 +41,16 @@ const (
 
 // palette holds the per-run resolved colours.
 type palette struct {
-	accent  color.Color
-	section color.Color
-	faint   color.Color
+	accent  lipgloss.TerminalColor
+	section lipgloss.TerminalColor
+	faint   lipgloss.TerminalColor
 }
 
-func buildPalette(isDark bool) palette {
-	ld := lipgloss.LightDark(isDark)
+func buildPalette() palette {
 	return palette{
-		accent:  ld(lipgloss.Color("62"), lipgloss.Color("205")),
-		section: ld(lipgloss.Color("62"), lipgloss.Color("205")),
-		faint:   ld(lipgloss.Color("243"), lipgloss.Color("240")),
+		accent:  lipgloss.AdaptiveColor{Light: "62", Dark: "205"},
+		section: lipgloss.AdaptiveColor{Light: "62", Dark: "205"},
+		faint:   lipgloss.AdaptiveColor{Light: "243", Dark: "240"},
 	}
 }
 
@@ -72,7 +68,7 @@ func buildPalette(isDark bool) palette {
 //	│                                │    Username: alice                     │
 //	└────────────────────────────────┴───────────────────────────────────────┘
 //
-// Navigating the list immediately refreshes the detail pane on the right.
+// Pressing Enter on a session opens a summary popup for the selected session.
 type model struct {
 	sessions []*sessionsearchv1pb.SessionSummary
 
@@ -81,19 +77,27 @@ type model struct {
 	help   help.Model
 	keys   keyMap
 
+	// popup is non-nil while the summary popup is active.
+	popup *summaryPopupModel
+
+	// summaryGetter is forwarded to the popup on Enter.
+	summaryGetter SummaryGetter
+
 	palette palette
-	isDark  bool
 	width   int
 	height  int
 }
 
-func newModel(sessions []*sessionsearchv1pb.SessionSummary) *model {
+func newModel(
+	sessions []*sessionsearchv1pb.SessionSummary,
+	summaryGetter SummaryGetter,
+) *model {
 	items := make([]list.Item, len(sessions))
 	for i, s := range sessions {
 		items[i] = sessionItem{s: s}
 	}
 
-	p := buildPalette(true) // assume dark until BackgroundColorMsg arrives
+	p := buildPalette()
 
 	delegate := buildDelegate(p)
 	l := list.New(items, delegate, 0, 0)
@@ -101,26 +105,23 @@ func newModel(sessions []*sessionsearchv1pb.SessionSummary) *model {
 	l.Styles.Title = lipgloss.NewStyle().Bold(true).Foreground(p.accent)
 	l.SetShowHelp(false)
 
-	vp := viewport.New()
-
-	h := help.New()
-	h.Styles = help.DefaultStyles(true)
+	vp := viewport.New(0, 0)
 
 	return &model{
-		sessions: sessions,
-		list:     l,
-		detail:   vp,
-		help:     h,
-		keys:     defaultKeyMap(),
-		palette:  p,
-		isDark:   true,
+		sessions:      sessions,
+		list:          l,
+		detail:        vp,
+		help:          help.New(),
+		keys:          defaultKeyMap(),
+		summaryGetter: summaryGetter,
+		palette:       p,
 	}
 }
 
 // buildDelegate creates a list delegate styled with the current palette.
 func buildDelegate(p palette) list.DefaultDelegate {
 	delegate := list.NewDefaultDelegate()
-	delegate.Styles = list.NewDefaultItemStyles(true)
+	delegate.Styles = list.NewDefaultItemStyles()
 	delegate.Styles.SelectedTitle = lipgloss.NewStyle().
 		Bold(true).
 		Foreground(p.accent)
@@ -129,20 +130,26 @@ func buildDelegate(p palette) list.DefaultDelegate {
 }
 
 func (m *model) Init() tea.Cmd {
-	return tea.RequestBackgroundColor
+	return nil
 }
 
 func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	// ── Popup mode ────────────────────────────────────────────────────────────
+	if m.popup != nil {
+		switch msg.(type) {
+		case closeSummaryMsg:
+			m.popup = nil
+			return m, nil
+		}
+		updated, cmd := m.popup.Update(msg)
+		m.popup = updated.(*summaryPopupModel)
+		return m, cmd
+	}
+
+	// ── List mode ─────────────────────────────────────────────────────────────
 	var cmds []tea.Cmd
 
 	switch msg := msg.(type) {
-	case tea.BackgroundColorMsg:
-		m.isDark = msg.IsDark()
-		m.palette = buildPalette(m.isDark)
-		m.applyPalette()
-		m.refreshDetail()
-		return m, nil
-
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
@@ -150,12 +157,19 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.refreshDetail()
 		return m, nil
 
-	case tea.KeyPressMsg:
+	case tea.KeyMsg:
 		if m.list.FilterState() == list.Filtering {
 			break
 		}
-		if key.Matches(msg, m.keys.Quit) {
+		switch {
+		case key.Matches(msg, m.keys.Quit):
 			return m, tea.Quit
+		case key.Matches(msg, m.keys.Enter):
+			if item, ok := m.list.SelectedItem().(sessionItem); ok {
+				popup := newSummaryPopupModel(item.s, m.summaryGetter, m.palette, m.width, m.height)
+				m.popup = popup
+				return m, popup.Init()
+			}
 		}
 	}
 
@@ -173,9 +187,9 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
-func (m *model) View() tea.View {
+func (m *model) View() string {
 	if m.width == 0 {
-		return tea.NewView("")
+		return ""
 	}
 
 	leftW, rightW := m.splitWidths()
@@ -189,7 +203,7 @@ func (m *model) View() tea.View {
 	// Right column: vertical rule + detail viewport + help bar.
 	helpBar := m.help.View(m.keys)
 	detailHeight := m.height - lipgloss.Height(helpBar) - 1 // -1 for separator
-	m.detail.SetHeight(detailHeight)
+	m.detail.Height = detailHeight
 
 	sep := lipgloss.NewStyle().
 		Faint(true).
@@ -205,12 +219,11 @@ func (m *model) View() tea.View {
 		MaxWidth(rightW).
 		Render(rightContent)
 
-	// Join the two columns side-by-side.
-	full := lipgloss.JoinHorizontal(lipgloss.Top, leftContent, rightContent)
-
-	v := tea.NewView(full)
-	v.AltScreen = true
-	return v
+	base := lipgloss.JoinHorizontal(lipgloss.Top, leftContent, rightContent)
+	if m.popup == nil {
+		return base
+	}
+	return m.popup.View()
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -227,16 +240,7 @@ func (m *model) splitWidths() (left, right int) {
 func (m *model) resize() {
 	leftW, rightW := m.splitWidths()
 	m.list.SetSize(leftW, m.height)
-	m.detail.SetWidth(rightW)
-}
-
-// applyPalette rebuilds palette-sensitive styles on the list and help widget.
-func (m *model) applyPalette() {
-	p := m.palette
-	delegate := buildDelegate(p)
-	m.list.SetDelegate(delegate)
-	m.list.Styles.Title = lipgloss.NewStyle().Bold(true).Foreground(p.accent)
-	m.help.Styles = help.DefaultStyles(m.isDark)
+	m.detail.Width = rightW
 }
 
 // refreshDetail re-renders the detail viewport for the currently selected

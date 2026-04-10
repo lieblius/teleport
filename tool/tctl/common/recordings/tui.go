@@ -21,7 +21,7 @@
 package recordings
 
 import (
-	tea "charm.land/bubbletea/v2"
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/gravitational/trace"
 
 	sessionsearchv1pb "github.com/gravitational/teleport/api/gen/proto/go/teleport/sessionsearch/v1"
@@ -29,8 +29,14 @@ import (
 
 // RunSearchTUI launches the full-screen interactive TUI for browsing session
 // search results. It blocks until the user quits.
-func RunSearchTUI(sessions []*sessionsearchv1pb.SessionSummary) error {
-	p := tea.NewProgram(newModel(sessions))
+//
+// summaryGetter may be nil; the TUI degrades gracefully when summaries are not
+// available.
+func RunSearchTUI(
+	sessions []*sessionsearchv1pb.SessionSummary,
+	summaryGetter SummaryGetter,
+) error {
+	p := tea.NewProgram(newModel(sessions, summaryGetter), tea.WithAltScreen())
 	_, err := p.Run()
 	return trace.Wrap(err)
 }

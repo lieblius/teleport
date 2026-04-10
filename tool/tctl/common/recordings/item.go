@@ -22,7 +22,7 @@ import (
 	"fmt"
 	"strings"
 
-	"charm.land/bubbles/v2/key"
+	"github.com/charmbracelet/bubbles/key"
 
 	sessionsearchv1pb "github.com/gravitational/teleport/api/gen/proto/go/teleport/sessionsearch/v1"
 )
@@ -66,16 +66,21 @@ func (i sessionItem) FilterValue() string {
 // ── Key map ───────────────────────────────────────────────────────────────────
 
 type keyMap struct {
-	Quit key.Binding
+	Enter key.Binding
+	Quit  key.Binding
 }
 
-func (k keyMap) ShortHelp() []key.Binding { return []key.Binding{k.Quit} }
+func (k keyMap) ShortHelp() []key.Binding { return []key.Binding{k.Enter, k.Quit} }
 func (k keyMap) FullHelp() [][]key.Binding {
-	return [][]key.Binding{{k.Quit}}
+	return [][]key.Binding{{k.Enter, k.Quit}}
 }
 
 func defaultKeyMap() keyMap {
 	return keyMap{
+		Enter: key.NewBinding(
+			key.WithKeys("enter"),
+			key.WithHelp("enter", "open"),
+		),
 		Quit: key.NewBinding(
 			key.WithKeys("q", "ctrl+c"),
 			key.WithHelp("q", "quit"),

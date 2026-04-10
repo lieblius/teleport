@@ -20,12 +20,11 @@ package recordings
 
 import (
 	"fmt"
-	"image/color"
 	"sort"
 	"strings"
 	"time"
 
-	"charm.land/lipgloss/v2"
+	"github.com/charmbracelet/lipgloss"
 
 	sessionsearchv1pb "github.com/gravitational/teleport/api/gen/proto/go/teleport/sessionsearch/v1"
 	summarizerv1pb "github.com/gravitational/teleport/api/gen/proto/go/teleport/summarizer/v1"
@@ -119,7 +118,7 @@ func renderDetail(s *sessionsearchv1pb.SessionSummary, p palette) string {
 // ── Severity helpers ──────────────────────────────────────────────────────────
 
 // severityColor returns a terminal colour for the given risk level.
-func severityColor(level summarizerv1pb.RiskLevel) color.Color {
+func severityColor(level summarizerv1pb.RiskLevel) lipgloss.TerminalColor {
 	switch level {
 	case summarizerv1pb.RiskLevel_RISK_LEVEL_LOW:
 		return lipgloss.Color("10") // bright green
@@ -130,7 +129,7 @@ func severityColor(level summarizerv1pb.RiskLevel) color.Color {
 	case summarizerv1pb.RiskLevel_RISK_LEVEL_CRITICAL:
 		return lipgloss.Color("196") // bright red
 	default:
-		return nil
+		return lipgloss.NoColor{}
 	}
 }
 
@@ -143,7 +142,7 @@ func formatSeverity(level summarizerv1pb.RiskLevel) string {
 func formatSeverityColored(level summarizerv1pb.RiskLevel) string {
 	label := formatSeverity(level)
 	c := severityColor(level)
-	if c == nil {
+	if _, ok := c.(lipgloss.NoColor); ok {
 		return label
 	}
 	style := lipgloss.NewStyle().Foreground(c)

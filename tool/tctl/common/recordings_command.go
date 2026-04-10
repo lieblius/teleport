@@ -25,6 +25,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/alecthomas/kingpin/v2"
 	"github.com/gravitational/trace"
@@ -79,7 +80,7 @@ type RecordingsCommand struct {
 	// recordingsSearch implements the "tctl recordings search" subcommand.
 	recordingsSearch *kingpin.CmdClause
 	// searchQuery is the free-text semantic/keyword query.
-	searchQuery string
+	searchQuery []string
 	// searchFromUTC is the start of the time range for the search.
 	searchFromUTC string
 	// searchToUTC is the end of the time range for the search.
@@ -124,7 +125,7 @@ func (c *RecordingsCommand) Initialize(app *kingpin.Application, t *tctlcfg.Glob
 	c.recordingsList.Flag("limit", fmt.Sprintf("Maximum number of recordings to show. Default %s.", defaults.TshTctlSessionListLimit)).Default(defaults.TshTctlSessionListLimit).IntVar(&c.maxRecordingsToShow)
 	c.recordingsList.Flag("last", "Duration into the past from which session recordings should be listed. Format 5h30m40s").StringVar(&c.recordingsSince)
 	c.recordingsSearch = recordings.Command("search", "Search session recordings using semantic and keyword queries.")
-	c.recordingsSearch.Arg("query", `Search query. Supports keywords and boolean operators (e.g. "DROP TABLE OR DELETE FROM").`).Required().StringVar(&c.searchQuery)
+	c.recordingsSearch.Arg("query", `Search query. Supports keywords and boolean operators (e.g. "DROP TABLE OR DELETE FROM").`).StringsVar(&c.searchQuery)
 	c.recordingsSearch.Flag("from", fmt.Sprintf("Start of time range. Format %s. Defaults to 24 hours ago.", defaults.TshTctlSessionListTimeFormat)).StringVar(&c.searchFromUTC)
 	c.recordingsSearch.Flag("to", fmt.Sprintf("End of time range. Format %s. Defaults to current time.", defaults.TshTctlSessionListTimeFormat)).StringVar(&c.searchToUTC)
 	c.recordingsSearch.Flag("label", "Filter by resource labels (key=value pairs), e.g. env/prod=true,db/type=postgres.").StringVar(&c.searchLabel)
@@ -258,11 +259,14 @@ func (c *RecordingsCommand) SearchRecordings(ctx context.Context, tc *authclient
 			return trace.Wrap(err, "parsing --label")
 		}
 	}
-
+	var search []string
+	if len(c.searchQuery) > 0 {
+		search = []string{strings.Join(c.searchQuery, " ")}
+	}
 	req := &sessionsearchv1pb.SearchSessionSummariesRequest{
 		StartTime:        timestamppb.New(fromUTC),
 		EndTime:          timestamppb.New(toUTC),
-		SearchQueries:    []string{c.searchQuery},
+		SearchQueries:    search,
 		ResourceLabels:   labels,
 		AccessRequestIds: c.searchAccessRequests,
 		Kinds:            c.searchKinds,
@@ -309,10 +313,11 @@ func (c *RecordingsCommand) SearchRecordings(ctx context.Context, tc *authclient
 		}
 	}
 
-	return trace.Wrap(showSessionSummaries(sessions, c.searchFormat, c.stdout))
+	summaryClient := summarizerv1pb.NewSummarizerServiceClient(tc.GetConnection())
+	return trace.Wrap(showSessionSummaries(sessions, c.searchFormat, c.stdout, summaryClient))
 }
 
-func showSessionSummaries(sessions []*sessionsearchv1pb.SessionSummary, format string, w io.Writer) error {
+func showSessionSummaries(sessions []*sessionsearchv1pb.SessionSummary, format string, w io.Writer, summaryGetter recordingstui.SummaryGetter) error {
 	switch format {
 	case teleport.JSON:
 		return trace.Wrap(utils.WriteJSONArray(w, sessions))
@@ -323,7 +328,7 @@ func showSessionSummaries(sessions []*sessionsearchv1pb.SessionSummary, format s
 			fmt.Fprintln(w, "No sessions found.")
 			return nil
 		}
-		return recordingstui.RunSearchTUI(sessions)
+		return recordingstui.RunSearchTUI(sessions, summaryGetter)
 	}
 }
 
