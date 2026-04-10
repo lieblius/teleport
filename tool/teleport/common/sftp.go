@@ -125,6 +125,13 @@ func (s *sftpHandler) ensureReqIsAllowed(req *sftp.Request) error {
 	if s.allowed.path != cleaned {
 		return trace.Errorf("operations are only allowed on %s, not %s", s.allowed.path, cleaned)
 	}
+	resolvedPath, err := sftputils.Realpath(cleaned)
+	if err != nil {
+		return trace.Wrap(err)
+	}
+	if s.allowed.path != resolvedPath {
+		return trace.Errorf("following symlinks is not allowed for moderated file transfers, request the resolved path instead")
+	}
 
 	switch req.Method {
 	case sftputils.MethodLstat, sftputils.MethodStat:
