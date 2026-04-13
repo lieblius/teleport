@@ -38,6 +38,75 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// SessionSearchAvailability describes the availability state of the session
+// search feature as reported by the access graph.
+type SessionSearchAvailability int32
+
+const (
+	// SESSION_SEARCH_AVAILABILITY_UNSPECIFIED is the default/unknown value.
+	SessionSearchAvailability_SESSION_SEARCH_AVAILABILITY_UNSPECIFIED SessionSearchAvailability = 0
+	// SESSION_SEARCH_AVAILABILITY_AVAILABLE indicates that session search is
+	// enabled and ready to serve queries.
+	SessionSearchAvailability_SESSION_SEARCH_AVAILABILITY_AVAILABLE SessionSearchAvailability = 1
+	// SESSION_SEARCH_AVAILABILITY_NOT_IMPLEMENTED indicates that the access
+	// graph instance backing this cluster does not implement the session search
+	// feature (e.g. an older version that predates the RPC).
+	SessionSearchAvailability_SESSION_SEARCH_AVAILABILITY_NOT_IMPLEMENTED SessionSearchAvailability = 2
+	// SESSION_SEARCH_AVAILABILITY_PG_TRGM_UNAVAILABLE indicates that the
+	// pg_trgm PostgreSQL extension required for full-text search is not
+	// installed in the access graph database.
+	SessionSearchAvailability_SESSION_SEARCH_AVAILABILITY_PG_TRGM_UNAVAILABLE SessionSearchAvailability = 3
+	// SESSION_SEARCH_AVAILABILITY_PG_VECTOR_UNAVAILABLE indicates that the
+	// pgvector PostgreSQL extension required for vector similarity search is not
+	// installed in the access graph database.
+	SessionSearchAvailability_SESSION_SEARCH_AVAILABILITY_PG_VECTOR_UNAVAILABLE SessionSearchAvailability = 4
+)
+
+// Enum value maps for SessionSearchAvailability.
+var (
+	SessionSearchAvailability_name = map[int32]string{
+		0: "SESSION_SEARCH_AVAILABILITY_UNSPECIFIED",
+		1: "SESSION_SEARCH_AVAILABILITY_AVAILABLE",
+		2: "SESSION_SEARCH_AVAILABILITY_NOT_IMPLEMENTED",
+		3: "SESSION_SEARCH_AVAILABILITY_PG_TRGM_UNAVAILABLE",
+		4: "SESSION_SEARCH_AVAILABILITY_PG_VECTOR_UNAVAILABLE",
+	}
+	SessionSearchAvailability_value = map[string]int32{
+		"SESSION_SEARCH_AVAILABILITY_UNSPECIFIED":           0,
+		"SESSION_SEARCH_AVAILABILITY_AVAILABLE":             1,
+		"SESSION_SEARCH_AVAILABILITY_NOT_IMPLEMENTED":       2,
+		"SESSION_SEARCH_AVAILABILITY_PG_TRGM_UNAVAILABLE":   3,
+		"SESSION_SEARCH_AVAILABILITY_PG_VECTOR_UNAVAILABLE": 4,
+	}
+)
+
+func (x SessionSearchAvailability) Enum() *SessionSearchAvailability {
+	p := new(SessionSearchAvailability)
+	*p = x
+	return p
+}
+
+func (x SessionSearchAvailability) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (SessionSearchAvailability) Descriptor() protoreflect.EnumDescriptor {
+	return file_teleport_sessionsearch_v1_session_search_proto_enumTypes[0].Descriptor()
+}
+
+func (SessionSearchAvailability) Type() protoreflect.EnumType {
+	return &file_teleport_sessionsearch_v1_session_search_proto_enumTypes[0]
+}
+
+func (x SessionSearchAvailability) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use SessionSearchAvailability.Descriptor instead.
+func (SessionSearchAvailability) EnumDescriptor() ([]byte, []int) {
+	return file_teleport_sessionsearch_v1_session_search_proto_rawDescGZIP(), []int{0}
+}
+
 // SearchSessionSummariesRequest specifies the filter criteria for a session summary search.
 // All filter fields are optional except start and end time; omitting a field disables
 // that filter. The server converts search_queries into chunks and generates embeddings internally.
@@ -775,6 +844,90 @@ func (x *SessionSummary) GetHostId() string {
 	return ""
 }
 
+// IsEnabledRequest is the request message for IsEnabled.
+type IsEnabledRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *IsEnabledRequest) Reset() {
+	*x = IsEnabledRequest{}
+	mi := &file_teleport_sessionsearch_v1_session_search_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *IsEnabledRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*IsEnabledRequest) ProtoMessage() {}
+
+func (x *IsEnabledRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_teleport_sessionsearch_v1_session_search_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use IsEnabledRequest.ProtoReflect.Descriptor instead.
+func (*IsEnabledRequest) Descriptor() ([]byte, []int) {
+	return file_teleport_sessionsearch_v1_session_search_proto_rawDescGZIP(), []int{7}
+}
+
+// IsEnabledResponse reports the availability of the session search feature.
+type IsEnabledResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// availability is the current availability state of the session search
+	// feature. UNSPECIFIED means the feature is available and ready.
+	Availability  SessionSearchAvailability `protobuf:"varint,1,opt,name=availability,proto3,enum=teleport.sessionsearch.v1.SessionSearchAvailability" json:"availability,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *IsEnabledResponse) Reset() {
+	*x = IsEnabledResponse{}
+	mi := &file_teleport_sessionsearch_v1_session_search_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *IsEnabledResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*IsEnabledResponse) ProtoMessage() {}
+
+func (x *IsEnabledResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_teleport_sessionsearch_v1_session_search_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use IsEnabledResponse.ProtoReflect.Descriptor instead.
+func (*IsEnabledResponse) Descriptor() ([]byte, []int) {
+	return file_teleport_sessionsearch_v1_session_search_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *IsEnabledResponse) GetAvailability() SessionSearchAvailability {
+	if x != nil {
+		return x.Availability
+	}
+	return SessionSearchAvailability_SESSION_SEARCH_AVAILABILITY_UNSPECIFIED
+}
+
 // BatchComplete signals the end of a batch of results. If has_more=true, the
 // client can resume by creating a new stream and sending next_batch_token as
 // SearchSessionSummariesRequest.batch_token.
@@ -793,7 +946,7 @@ type SearchSessionSummariesResponse_BatchComplete struct {
 
 func (x *SearchSessionSummariesResponse_BatchComplete) Reset() {
 	*x = SearchSessionSummariesResponse_BatchComplete{}
-	mi := &file_teleport_sessionsearch_v1_session_search_proto_msgTypes[8]
+	mi := &file_teleport_sessionsearch_v1_session_search_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -805,7 +958,7 @@ func (x *SearchSessionSummariesResponse_BatchComplete) String() string {
 func (*SearchSessionSummariesResponse_BatchComplete) ProtoMessage() {}
 
 func (x *SearchSessionSummariesResponse_BatchComplete) ProtoReflect() protoreflect.Message {
-	mi := &file_teleport_sessionsearch_v1_session_search_proto_msgTypes[8]
+	mi := &file_teleport_sessionsearch_v1_session_search_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -920,9 +1073,19 @@ const file_teleport_sessionsearch_v1_session_search_proto_rawDesc = "" +
 	"\ahost_id\x18\x10 \x01(\tR\x06hostId\x1aA\n" +
 	"\x13ResourceLabelsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x012\xa8\x01\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\x12\n" +
+	"\x10IsEnabledRequest\"m\n" +
+	"\x11IsEnabledResponse\x12X\n" +
+	"\favailability\x18\x01 \x01(\x0e24.teleport.sessionsearch.v1.SessionSearchAvailabilityR\favailability*\x90\x02\n" +
+	"\x19SessionSearchAvailability\x12+\n" +
+	"'SESSION_SEARCH_AVAILABILITY_UNSPECIFIED\x10\x00\x12)\n" +
+	"%SESSION_SEARCH_AVAILABILITY_AVAILABLE\x10\x01\x12/\n" +
+	"+SESSION_SEARCH_AVAILABILITY_NOT_IMPLEMENTED\x10\x02\x123\n" +
+	"/SESSION_SEARCH_AVAILABILITY_PG_TRGM_UNAVAILABLE\x10\x03\x125\n" +
+	"1SESSION_SEARCH_AVAILABILITY_PG_VECTOR_UNAVAILABLE\x10\x042\x90\x02\n" +
 	"\x14SessionSearchService\x12\x8f\x01\n" +
-	"\x16SearchSessionSummaries\x128.teleport.sessionsearch.v1.SearchSessionSummariesRequest\x1a9.teleport.sessionsearch.v1.SearchSessionSummariesResponse0\x01B^Z\\github.com/gravitational/teleport/api/gen/proto/go/teleport/sessionsearch/v1;sessionsearchv1b\x06proto3"
+	"\x16SearchSessionSummaries\x128.teleport.sessionsearch.v1.SearchSessionSummariesRequest\x1a9.teleport.sessionsearch.v1.SearchSessionSummariesResponse0\x01\x12f\n" +
+	"\tIsEnabled\x12+.teleport.sessionsearch.v1.IsEnabledRequest\x1a,.teleport.sessionsearch.v1.IsEnabledResponseB^Z\\github.com/gravitational/teleport/api/gen/proto/go/teleport/sessionsearch/v1;sessionsearchv1b\x06proto3"
 
 var (
 	file_teleport_sessionsearch_v1_session_search_proto_rawDescOnce sync.Once
@@ -936,46 +1099,53 @@ func file_teleport_sessionsearch_v1_session_search_proto_rawDescGZIP() []byte {
 	return file_teleport_sessionsearch_v1_session_search_proto_rawDescData
 }
 
-var file_teleport_sessionsearch_v1_session_search_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
+var file_teleport_sessionsearch_v1_session_search_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_teleport_sessionsearch_v1_session_search_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
 var file_teleport_sessionsearch_v1_session_search_proto_goTypes = []any{
-	(*SearchSessionSummariesRequest)(nil),                // 0: teleport.sessionsearch.v1.SearchSessionSummariesRequest
-	(*ResourceProperties)(nil),                           // 1: teleport.sessionsearch.v1.ResourceProperties
-	(*SSHProperties)(nil),                                // 2: teleport.sessionsearch.v1.SSHProperties
-	(*KubernetesProperties)(nil),                         // 3: teleport.sessionsearch.v1.KubernetesProperties
-	(*DatabaseProperties)(nil),                           // 4: teleport.sessionsearch.v1.DatabaseProperties
-	(*SearchSessionSummariesResponse)(nil),               // 5: teleport.sessionsearch.v1.SearchSessionSummariesResponse
-	(*SessionSummary)(nil),                               // 6: teleport.sessionsearch.v1.SessionSummary
-	nil,                                                  // 7: teleport.sessionsearch.v1.SearchSessionSummariesRequest.ResourceLabelsEntry
-	(*SearchSessionSummariesResponse_BatchComplete)(nil), // 8: teleport.sessionsearch.v1.SearchSessionSummariesResponse.BatchComplete
-	nil,                           // 9: teleport.sessionsearch.v1.SessionSummary.ResourceLabelsEntry
-	(*timestamppb.Timestamp)(nil), // 10: google.protobuf.Timestamp
-	(v1.RiskLevel)(0),             // 11: teleport.summarizer.v1.RiskLevel
-	(*structpb.Struct)(nil),       // 12: google.protobuf.Struct
+	(SessionSearchAvailability)(0),                       // 0: teleport.sessionsearch.v1.SessionSearchAvailability
+	(*SearchSessionSummariesRequest)(nil),                // 1: teleport.sessionsearch.v1.SearchSessionSummariesRequest
+	(*ResourceProperties)(nil),                           // 2: teleport.sessionsearch.v1.ResourceProperties
+	(*SSHProperties)(nil),                                // 3: teleport.sessionsearch.v1.SSHProperties
+	(*KubernetesProperties)(nil),                         // 4: teleport.sessionsearch.v1.KubernetesProperties
+	(*DatabaseProperties)(nil),                           // 5: teleport.sessionsearch.v1.DatabaseProperties
+	(*SearchSessionSummariesResponse)(nil),               // 6: teleport.sessionsearch.v1.SearchSessionSummariesResponse
+	(*SessionSummary)(nil),                               // 7: teleport.sessionsearch.v1.SessionSummary
+	(*IsEnabledRequest)(nil),                             // 8: teleport.sessionsearch.v1.IsEnabledRequest
+	(*IsEnabledResponse)(nil),                            // 9: teleport.sessionsearch.v1.IsEnabledResponse
+	nil,                                                  // 10: teleport.sessionsearch.v1.SearchSessionSummariesRequest.ResourceLabelsEntry
+	(*SearchSessionSummariesResponse_BatchComplete)(nil), // 11: teleport.sessionsearch.v1.SearchSessionSummariesResponse.BatchComplete
+	nil,                           // 12: teleport.sessionsearch.v1.SessionSummary.ResourceLabelsEntry
+	(*timestamppb.Timestamp)(nil), // 13: google.protobuf.Timestamp
+	(v1.RiskLevel)(0),             // 14: teleport.summarizer.v1.RiskLevel
+	(*structpb.Struct)(nil),       // 15: google.protobuf.Struct
 }
 var file_teleport_sessionsearch_v1_session_search_proto_depIdxs = []int32{
-	10, // 0: teleport.sessionsearch.v1.SearchSessionSummariesRequest.start_time:type_name -> google.protobuf.Timestamp
-	10, // 1: teleport.sessionsearch.v1.SearchSessionSummariesRequest.end_time:type_name -> google.protobuf.Timestamp
-	7,  // 2: teleport.sessionsearch.v1.SearchSessionSummariesRequest.resource_labels:type_name -> teleport.sessionsearch.v1.SearchSessionSummariesRequest.ResourceLabelsEntry
-	1,  // 3: teleport.sessionsearch.v1.SearchSessionSummariesRequest.resource_properties:type_name -> teleport.sessionsearch.v1.ResourceProperties
-	11, // 4: teleport.sessionsearch.v1.SearchSessionSummariesRequest.severity:type_name -> teleport.summarizer.v1.RiskLevel
-	2,  // 5: teleport.sessionsearch.v1.ResourceProperties.ssh:type_name -> teleport.sessionsearch.v1.SSHProperties
-	3,  // 6: teleport.sessionsearch.v1.ResourceProperties.kubernetes:type_name -> teleport.sessionsearch.v1.KubernetesProperties
-	4,  // 7: teleport.sessionsearch.v1.ResourceProperties.database:type_name -> teleport.sessionsearch.v1.DatabaseProperties
-	6,  // 8: teleport.sessionsearch.v1.SearchSessionSummariesResponse.summary:type_name -> teleport.sessionsearch.v1.SessionSummary
-	8,  // 9: teleport.sessionsearch.v1.SearchSessionSummariesResponse.batch_complete:type_name -> teleport.sessionsearch.v1.SearchSessionSummariesResponse.BatchComplete
-	10, // 10: teleport.sessionsearch.v1.SessionSummary.session_start:type_name -> google.protobuf.Timestamp
-	12, // 11: teleport.sessionsearch.v1.SessionSummary.user_traits:type_name -> google.protobuf.Struct
-	9,  // 12: teleport.sessionsearch.v1.SessionSummary.resource_labels:type_name -> teleport.sessionsearch.v1.SessionSummary.ResourceLabelsEntry
-	1,  // 13: teleport.sessionsearch.v1.SessionSummary.resource_properties:type_name -> teleport.sessionsearch.v1.ResourceProperties
-	11, // 14: teleport.sessionsearch.v1.SessionSummary.severity:type_name -> teleport.summarizer.v1.RiskLevel
-	10, // 15: teleport.sessionsearch.v1.SessionSummary.session_end:type_name -> google.protobuf.Timestamp
-	0,  // 16: teleport.sessionsearch.v1.SessionSearchService.SearchSessionSummaries:input_type -> teleport.sessionsearch.v1.SearchSessionSummariesRequest
-	5,  // 17: teleport.sessionsearch.v1.SessionSearchService.SearchSessionSummaries:output_type -> teleport.sessionsearch.v1.SearchSessionSummariesResponse
-	17, // [17:18] is the sub-list for method output_type
-	16, // [16:17] is the sub-list for method input_type
-	16, // [16:16] is the sub-list for extension type_name
-	16, // [16:16] is the sub-list for extension extendee
-	0,  // [0:16] is the sub-list for field type_name
+	13, // 0: teleport.sessionsearch.v1.SearchSessionSummariesRequest.start_time:type_name -> google.protobuf.Timestamp
+	13, // 1: teleport.sessionsearch.v1.SearchSessionSummariesRequest.end_time:type_name -> google.protobuf.Timestamp
+	10, // 2: teleport.sessionsearch.v1.SearchSessionSummariesRequest.resource_labels:type_name -> teleport.sessionsearch.v1.SearchSessionSummariesRequest.ResourceLabelsEntry
+	2,  // 3: teleport.sessionsearch.v1.SearchSessionSummariesRequest.resource_properties:type_name -> teleport.sessionsearch.v1.ResourceProperties
+	14, // 4: teleport.sessionsearch.v1.SearchSessionSummariesRequest.severity:type_name -> teleport.summarizer.v1.RiskLevel
+	3,  // 5: teleport.sessionsearch.v1.ResourceProperties.ssh:type_name -> teleport.sessionsearch.v1.SSHProperties
+	4,  // 6: teleport.sessionsearch.v1.ResourceProperties.kubernetes:type_name -> teleport.sessionsearch.v1.KubernetesProperties
+	5,  // 7: teleport.sessionsearch.v1.ResourceProperties.database:type_name -> teleport.sessionsearch.v1.DatabaseProperties
+	7,  // 8: teleport.sessionsearch.v1.SearchSessionSummariesResponse.summary:type_name -> teleport.sessionsearch.v1.SessionSummary
+	11, // 9: teleport.sessionsearch.v1.SearchSessionSummariesResponse.batch_complete:type_name -> teleport.sessionsearch.v1.SearchSessionSummariesResponse.BatchComplete
+	13, // 10: teleport.sessionsearch.v1.SessionSummary.session_start:type_name -> google.protobuf.Timestamp
+	15, // 11: teleport.sessionsearch.v1.SessionSummary.user_traits:type_name -> google.protobuf.Struct
+	12, // 12: teleport.sessionsearch.v1.SessionSummary.resource_labels:type_name -> teleport.sessionsearch.v1.SessionSummary.ResourceLabelsEntry
+	2,  // 13: teleport.sessionsearch.v1.SessionSummary.resource_properties:type_name -> teleport.sessionsearch.v1.ResourceProperties
+	14, // 14: teleport.sessionsearch.v1.SessionSummary.severity:type_name -> teleport.summarizer.v1.RiskLevel
+	13, // 15: teleport.sessionsearch.v1.SessionSummary.session_end:type_name -> google.protobuf.Timestamp
+	0,  // 16: teleport.sessionsearch.v1.IsEnabledResponse.availability:type_name -> teleport.sessionsearch.v1.SessionSearchAvailability
+	1,  // 17: teleport.sessionsearch.v1.SessionSearchService.SearchSessionSummaries:input_type -> teleport.sessionsearch.v1.SearchSessionSummariesRequest
+	8,  // 18: teleport.sessionsearch.v1.SessionSearchService.IsEnabled:input_type -> teleport.sessionsearch.v1.IsEnabledRequest
+	6,  // 19: teleport.sessionsearch.v1.SessionSearchService.SearchSessionSummaries:output_type -> teleport.sessionsearch.v1.SearchSessionSummariesResponse
+	9,  // 20: teleport.sessionsearch.v1.SessionSearchService.IsEnabled:output_type -> teleport.sessionsearch.v1.IsEnabledResponse
+	19, // [19:21] is the sub-list for method output_type
+	17, // [17:19] is the sub-list for method input_type
+	17, // [17:17] is the sub-list for extension type_name
+	17, // [17:17] is the sub-list for extension extendee
+	0,  // [0:17] is the sub-list for field type_name
 }
 
 func init() { file_teleport_sessionsearch_v1_session_search_proto_init() }
@@ -1001,13 +1171,14 @@ func file_teleport_sessionsearch_v1_session_search_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_teleport_sessionsearch_v1_session_search_proto_rawDesc), len(file_teleport_sessionsearch_v1_session_search_proto_rawDesc)),
-			NumEnums:      0,
-			NumMessages:   10,
+			NumEnums:      1,
+			NumMessages:   12,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
 		GoTypes:           file_teleport_sessionsearch_v1_session_search_proto_goTypes,
 		DependencyIndexes: file_teleport_sessionsearch_v1_session_search_proto_depIdxs,
+		EnumInfos:         file_teleport_sessionsearch_v1_session_search_proto_enumTypes,
 		MessageInfos:      file_teleport_sessionsearch_v1_session_search_proto_msgTypes,
 	}.Build()
 	File_teleport_sessionsearch_v1_session_search_proto = out.File

@@ -34,6 +34,7 @@ const _ = grpc.SupportPackageIsVersion9
 
 const (
 	SessionSearchService_SearchSessionSummaries_FullMethodName = "/teleport.sessionsearch.v1.SessionSearchService/SearchSessionSummaries"
+	SessionSearchService_IsEnabled_FullMethodName              = "/teleport.sessionsearch.v1.SessionSearchService/IsEnabled"
 )
 
 // SessionSearchServiceClient is the client API for SessionSearchService service.
@@ -74,6 +75,14 @@ type SessionSearchServiceClient interface {
 	//	  }
 	//	}
 	SearchSessionSummaries(ctx context.Context, in *SearchSessionSummariesRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[SearchSessionSummariesResponse], error)
+	// IsEnabled reports whether the session search feature is active in the
+	// access graph backing this Teleport cluster. Clients should call this before
+	// issuing a SearchSessionSummaries request so they can surface a clear
+	// "feature disabled" message instead of an empty result set.
+	//
+	// Only the proxy role may call this RPC; end-user clients are expected to
+	// call the equivalent method on the proxy, which forwards the check.
+	IsEnabled(ctx context.Context, in *IsEnabledRequest, opts ...grpc.CallOption) (*IsEnabledResponse, error)
 }
 
 type sessionSearchServiceClient struct {
@@ -102,6 +111,16 @@ func (c *sessionSearchServiceClient) SearchSessionSummaries(ctx context.Context,
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type SessionSearchService_SearchSessionSummariesClient = grpc.ServerStreamingClient[SearchSessionSummariesResponse]
+
+func (c *sessionSearchServiceClient) IsEnabled(ctx context.Context, in *IsEnabledRequest, opts ...grpc.CallOption) (*IsEnabledResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(IsEnabledResponse)
+	err := c.cc.Invoke(ctx, SessionSearchService_IsEnabled_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
 
 // SessionSearchServiceServer is the server API for SessionSearchService service.
 // All implementations must embed UnimplementedSessionSearchServiceServer
@@ -141,6 +160,14 @@ type SessionSearchServiceServer interface {
 	//	  }
 	//	}
 	SearchSessionSummaries(*SearchSessionSummariesRequest, grpc.ServerStreamingServer[SearchSessionSummariesResponse]) error
+	// IsEnabled reports whether the session search feature is active in the
+	// access graph backing this Teleport cluster. Clients should call this before
+	// issuing a SearchSessionSummaries request so they can surface a clear
+	// "feature disabled" message instead of an empty result set.
+	//
+	// Only the proxy role may call this RPC; end-user clients are expected to
+	// call the equivalent method on the proxy, which forwards the check.
+	IsEnabled(context.Context, *IsEnabledRequest) (*IsEnabledResponse, error)
 	mustEmbedUnimplementedSessionSearchServiceServer()
 }
 
@@ -153,6 +180,9 @@ type UnimplementedSessionSearchServiceServer struct{}
 
 func (UnimplementedSessionSearchServiceServer) SearchSessionSummaries(*SearchSessionSummariesRequest, grpc.ServerStreamingServer[SearchSessionSummariesResponse]) error {
 	return status.Errorf(codes.Unimplemented, "method SearchSessionSummaries not implemented")
+}
+func (UnimplementedSessionSearchServiceServer) IsEnabled(context.Context, *IsEnabledRequest) (*IsEnabledResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method IsEnabled not implemented")
 }
 func (UnimplementedSessionSearchServiceServer) mustEmbedUnimplementedSessionSearchServiceServer() {}
 func (UnimplementedSessionSearchServiceServer) testEmbeddedByValue()                              {}
@@ -186,13 +216,36 @@ func _SessionSearchService_SearchSessionSummaries_Handler(srv interface{}, strea
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type SessionSearchService_SearchSessionSummariesServer = grpc.ServerStreamingServer[SearchSessionSummariesResponse]
 
+func _SessionSearchService_IsEnabled_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(IsEnabledRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SessionSearchServiceServer).IsEnabled(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SessionSearchService_IsEnabled_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SessionSearchServiceServer).IsEnabled(ctx, req.(*IsEnabledRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // SessionSearchService_ServiceDesc is the grpc.ServiceDesc for SessionSearchService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var SessionSearchService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "teleport.sessionsearch.v1.SessionSearchService",
 	HandlerType: (*SessionSearchServiceServer)(nil),
-	Methods:     []grpc.MethodDesc{},
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "IsEnabled",
+			Handler:    _SessionSearchService_IsEnabled_Handler,
+		},
+	},
 	Streams: []grpc.StreamDesc{
 		{
 			StreamName:    "SearchSessionSummaries",

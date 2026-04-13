@@ -55,6 +55,14 @@ service SessionSearchService {
   //     }
   //   }
   rpc SearchSessionSummaries(SearchSessionSummariesRequest) returns (stream SearchSessionSummariesResponse);
+  // IsEnabled reports whether the session search feature is active in the
+  // access graph backing this Teleport cluster. Clients should call this before
+  // issuing a SearchSessionSummaries request so they can surface a clear
+  // "feature disabled" message instead of an empty result set.
+  //
+  // Only the proxy role may call this RPC; end-user clients are expected to
+  // call the equivalent method on the proxy, which forwards the check.
+  rpc IsEnabled(IsEnabledRequest) returns (IsEnabledResponse);
 }
 
 // SearchSessionSummariesRequest specifies the filter criteria for a session summary search.
@@ -257,4 +265,36 @@ message SessionSummary {
 
   // host_id is the unique identifier of the host where the session occurred.
   string host_id = 16;
+}
+
+// SessionSearchAvailability describes the availability state of the session
+// search feature as reported by the access graph.
+enum SessionSearchAvailability {
+  // SESSION_SEARCH_AVAILABILITY_UNSPECIFIED is the default/unknown value.
+  SESSION_SEARCH_AVAILABILITY_UNSPECIFIED = 0;
+  // SESSION_SEARCH_AVAILABILITY_AVAILABLE indicates that session search is
+  // enabled and ready to serve queries.
+  SESSION_SEARCH_AVAILABILITY_AVAILABLE = 1;
+  // SESSION_SEARCH_AVAILABILITY_NOT_IMPLEMENTED indicates that the access
+  // graph instance backing this cluster does not implement the session search
+  // feature (e.g. an older version that predates the RPC).
+  SESSION_SEARCH_AVAILABILITY_NOT_IMPLEMENTED = 2;
+  // SESSION_SEARCH_AVAILABILITY_PG_TRGM_UNAVAILABLE indicates that the
+  // pg_trgm PostgreSQL extension required for full-text search is not
+  // installed in the access graph database.
+  SESSION_SEARCH_AVAILABILITY_PG_TRGM_UNAVAILABLE = 3;
+  // SESSION_SEARCH_AVAILABILITY_PG_VECTOR_UNAVAILABLE indicates that the
+  // pgvector PostgreSQL extension required for vector similarity search is not
+  // installed in the access graph database.
+  SESSION_SEARCH_AVAILABILITY_PG_VECTOR_UNAVAILABLE = 4;
+}
+
+// IsEnabledRequest is the request message for IsEnabled.
+message IsEnabledRequest {}
+
+// IsEnabledResponse reports the availability of the session search feature.
+message IsEnabledResponse {
+  // availability is the current availability state of the session search
+  // feature. UNSPECIFIED means the feature is available and ready.
+  SessionSearchAvailability availability = 1;
 }

@@ -38,6 +38,7 @@ const _ = grpc.SupportPackageIsVersion9
 const (
 	SessionRecordingService_SearchSessionSummaries_FullMethodName = "/accessgraph.v1.SessionRecordingService/SearchSessionSummaries"
 	SessionRecordingService_StoreSessionSummary_FullMethodName    = "/accessgraph.v1.SessionRecordingService/StoreSessionSummary"
+	SessionRecordingService_IsSessionSearchEnabled_FullMethodName = "/accessgraph.v1.SessionRecordingService/IsSessionSearchEnabled"
 )
 
 // SessionRecordingServiceClient is the client API for SessionRecordingService service.
@@ -84,6 +85,11 @@ type SessionRecordingServiceClient interface {
 	// and embeddings to the access graph storage. Re-storing the same session_id
 	// is idempotent; the server overwrites the existing entry.
 	StoreSessionSummary(ctx context.Context, in *StoreSessionSummaryRequest, opts ...grpc.CallOption) (*StoreSessionSummaryResponse, error)
+	// IsSessionSearchEnabled reports whether the session search feature is
+	// active in this access graph instance. The Auth server calls this before
+	// exposing session search to end users so that it can surface a clear
+	// "feature disabled" error rather than an empty result set.
+	IsSessionSearchEnabled(ctx context.Context, in *IsSessionSearchEnabledRequest, opts ...grpc.CallOption) (*IsSessionSearchEnabledResponse, error)
 }
 
 type sessionRecordingServiceClient struct {
@@ -111,6 +117,16 @@ func (c *sessionRecordingServiceClient) StoreSessionSummary(ctx context.Context,
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(StoreSessionSummaryResponse)
 	err := c.cc.Invoke(ctx, SessionRecordingService_StoreSessionSummary_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sessionRecordingServiceClient) IsSessionSearchEnabled(ctx context.Context, in *IsSessionSearchEnabledRequest, opts ...grpc.CallOption) (*IsSessionSearchEnabledResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(IsSessionSearchEnabledResponse)
+	err := c.cc.Invoke(ctx, SessionRecordingService_IsSessionSearchEnabled_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -161,6 +177,11 @@ type SessionRecordingServiceServer interface {
 	// and embeddings to the access graph storage. Re-storing the same session_id
 	// is idempotent; the server overwrites the existing entry.
 	StoreSessionSummary(context.Context, *StoreSessionSummaryRequest) (*StoreSessionSummaryResponse, error)
+	// IsSessionSearchEnabled reports whether the session search feature is
+	// active in this access graph instance. The Auth server calls this before
+	// exposing session search to end users so that it can surface a clear
+	// "feature disabled" error rather than an empty result set.
+	IsSessionSearchEnabled(context.Context, *IsSessionSearchEnabledRequest) (*IsSessionSearchEnabledResponse, error)
 	mustEmbedUnimplementedSessionRecordingServiceServer()
 }
 
@@ -176,6 +197,9 @@ func (UnimplementedSessionRecordingServiceServer) SearchSessionSummaries(grpc.Bi
 }
 func (UnimplementedSessionRecordingServiceServer) StoreSessionSummary(context.Context, *StoreSessionSummaryRequest) (*StoreSessionSummaryResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method StoreSessionSummary not implemented")
+}
+func (UnimplementedSessionRecordingServiceServer) IsSessionSearchEnabled(context.Context, *IsSessionSearchEnabledRequest) (*IsSessionSearchEnabledResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method IsSessionSearchEnabled not implemented")
 }
 func (UnimplementedSessionRecordingServiceServer) mustEmbedUnimplementedSessionRecordingServiceServer() {
 }
@@ -224,6 +248,24 @@ func _SessionRecordingService_StoreSessionSummary_Handler(srv interface{}, ctx c
 	return interceptor(ctx, in, info, handler)
 }
 
+func _SessionRecordingService_IsSessionSearchEnabled_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(IsSessionSearchEnabledRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SessionRecordingServiceServer).IsSessionSearchEnabled(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SessionRecordingService_IsSessionSearchEnabled_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SessionRecordingServiceServer).IsSessionSearchEnabled(ctx, req.(*IsSessionSearchEnabledRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // SessionRecordingService_ServiceDesc is the grpc.ServiceDesc for SessionRecordingService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -234,6 +276,10 @@ var SessionRecordingService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "StoreSessionSummary",
 			Handler:    _SessionRecordingService_StoreSessionSummary_Handler,
+		},
+		{
+			MethodName: "IsSessionSearchEnabled",
+			Handler:    _SessionRecordingService_IsSessionSearchEnabled_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{
