@@ -29,6 +29,7 @@ import (
 	"os"
 	"os/user"
 	"path"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -127,9 +128,21 @@ func (s *sftpHandler) ensureReqIsAllowed(req *sftp.Request) error {
 	}
 	resolvedPath, err := sftputils.Realpath(cleaned)
 	if err != nil {
-		return trace.Wrap(err)
+		// Check if newly created file could exist.
+		if !s.allowed.write {
+			return trace.Wrap(err)
+		}
+		osErr := trace.ConvertSystemError(err)
+		if !trace.IsNotFound(osErr) {
+			return trace.Wrap(err)
+		}
+		resolvedDir, dirErr := sftputils.Realpath(filepath.Dir(cleaned))
+		if dirErr != nil {
+			return trace.Wrap(err)
+		}
+		resolvedPath = filepath.Join(resolvedDir, filepath.Base(cleaned))
 	}
-	if s.allowed.path != resolvedPath {
+	if s.allowed.path != filepath.ToSlash(resolvedPath) {
 		return trace.Errorf("following symlinks is not allowed for moderated file transfers, request the resolved path instead")
 	}
 
