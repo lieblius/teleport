@@ -47,7 +47,7 @@ const maxPowerStateFallbackLookupsPerFetch = 10
 // group. The fetch is deferred until the first caller invokes get, and subsequent callers receive
 // the cached result. This is safe for both sequential and concurrent use via sync.Once.
 //
-// Providers are created fresh each time fetchers are rebuilt (every poll cycle via fullRefresh),
+// Instances are created fresh each time fetchers are rebuilt (every poll cycle via fullRefresh),
 // so results never go stale across cycles.
 type vmPowerStates struct {
 	once   sync.Once

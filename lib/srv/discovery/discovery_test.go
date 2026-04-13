@@ -3168,6 +3168,24 @@ func (m *mockAzureClient) ListVirtualMachines(_ context.Context, _ string) ([]*a
 	return m.vms, nil
 }
 
+func (m *mockAzureClient) ListVirtualMachineStatuses(_ context.Context, _ string) (map[string]azure.PowerState, error) {
+	// Key by vm.ID (the full ARM resource ID), matching the production lookup key in azure_watcher.go.
+	states := make(map[string]azure.PowerState)
+	for _, vm := range m.vms {
+		if vm.ID != nil {
+			states[*vm.ID] = azure.PowerStateRunning
+		}
+	}
+	return states, nil
+}
+
+func (m *mockAzureClient) GetVMPowerState(_ context.Context, _, _ string) (azure.PowerStateResult, error) {
+	return azure.PowerStateResult{
+		State: azure.PowerStateRunning,
+		Found: true,
+	}, nil
+}
+
 func TestAzureVMDiscovery(t *testing.T) {
 	t.Parallel()
 
@@ -3249,6 +3267,26 @@ func TestAzureVMDiscovery(t *testing.T) {
 				},
 				Properties: &armcompute.VirtualMachineProperties{
 					VMID: aws.String("test-vmid-integration"),
+				},
+			},
+			{
+				ID: aws.String((&arm.ResourceID{
+					SubscriptionID:    "testsub",
+					ResourceGroupName: "rg",
+					Name:              "testvm-windows",
+				}).String()),
+				Name:     aws.String("testvm-windows"),
+				Location: aws.String("westcentralus"),
+				Tags: map[string]*string{
+					"teleport": aws.String("yes"),
+				},
+				Properties: &armcompute.VirtualMachineProperties{
+					VMID: aws.String("test-vmid-windows"),
+					StorageProfile: &armcompute.StorageProfile{
+						OSDisk: &armcompute.OSDisk{
+							OSType: to.Ptr(armcompute.OperatingSystemTypesWindows),
+						},
+					},
 				},
 			},
 		}

@@ -406,7 +406,7 @@ func (c *vmClient) ListVirtualMachines(ctx context.Context, resourceGroup string
 
 // ListVirtualMachineStatuses returns the power state of all VMs in the subscription,
 // keyed by resource ID (vm.ID). Uses StatusOnly=true on ListAll for wildcard resource
-// group. Returns nil for specific resource groups (StatusOnly is not available for
+// group. Returns an error for specific resource groups (StatusOnly is not available for
 // per-RG listing, and per-VM Get calls would create O(N) amplification each cycle).
 func (c *vmClient) ListVirtualMachineStatuses(
 	ctx context.Context, resourceGroup string,
