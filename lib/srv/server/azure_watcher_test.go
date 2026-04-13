@@ -21,6 +21,7 @@ package server
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"testing"
 	"time"
 
@@ -425,6 +426,409 @@ func TestAzureInstances_FilterExistingNodes(t *testing.T) {
 			require.ElementsMatch(t, tc.expectedVMIDs, gotVMIDs)
 		})
 	}
+}
+
+func TestMatchersToAzureInstanceFetchers_PowerStateFilterSetup(t *testing.T) {
+	t.Parallel()
+
+	const sub = "00000000-0000-0000-0000-000000000000"
+	logger := slog.New(slog.DiscardHandler)
+
+	baseMatcher := types.AzureMatcher{
+		Types:          []string{"vm"},
+		Subscriptions:  []string{sub},
+		ResourceGroups: []string{types.Wildcard},
+		Regions:        []string{types.Wildcard},
+		ResourceTags:   types.Labels{"*": []string{"*"}},
+		Integration:    "int-1",
+	}
+
+	t.Run("single wildcard fetcher remains unshared until explicit setup", func(t *testing.T) {
+		fetchers := MatchersToAzureInstanceFetchers(
+			t.Context(),
+			logger,
+			[]types.AzureMatcher{baseMatcher},
+			nil,
+			"",
+			func(context.Context, string) ([]string, error) { return nil, nil },
+		)
+
+		require.Len(t, fetchers, 1)
+		f := fetchers[0].(*azureInstanceFetcher)
+		require.Nil(t, f.vmPowerStates,
+			"callers should apply ShareAzureVMPowerStates explicitly")
+	})
+
+	t.Run("explicit sharing wires duplicate wildcard fetchers to one status lookup", func(t *testing.T) {
+		m2 := baseMatcher
+		m2.ResourceTags = types.Labels{"env": []string{"prod"}}
+
+		fetchers := MatchersToAzureInstanceFetchers(
+			t.Context(),
+			logger,
+			[]types.AzureMatcher{baseMatcher, m2},
+			nil,
+			"",
+			func(context.Context, string) ([]string, error) { return nil, nil },
+		)
+		ShareAzureVMPowerStates(t.Context(), logger, fetchers)
+
+		require.Len(t, fetchers, 2)
+		f0 := fetchers[0].(*azureInstanceFetcher)
+		f1 := fetchers[1].(*azureInstanceFetcher)
+		require.NotNil(t, f0.vmPowerStates)
+		require.NotNil(t, f1.vmPowerStates)
+		require.Same(t, f0.vmPowerStates, f1.vmPowerStates,
+			"fetchers in the same (integration, subscription) group must share one status lookup")
+	})
+
+	t.Run("explicit sharing keeps different integrations independent", func(t *testing.T) {
+		m2 := baseMatcher
+		m2.Integration = "int-2"
+
+		fetchers := MatchersToAzureInstanceFetchers(
+			t.Context(),
+			logger,
+			[]types.AzureMatcher{baseMatcher, m2},
+			nil,
+			"",
+			func(context.Context, string) ([]string, error) { return nil, nil },
+		)
+		ShareAzureVMPowerStates(t.Context(), logger, fetchers)
+
+		require.Len(t, fetchers, 2)
+		f0 := fetchers[0].(*azureInstanceFetcher)
+		f1 := fetchers[1].(*azureInstanceFetcher)
+		require.NotNil(t, f0.vmPowerStates)
+		require.NotNil(t, f1.vmPowerStates)
+		require.NotSame(t, f0.vmPowerStates, f1.vmPowerStates,
+			"fetchers in different integration groups must have independent status lookups")
+	})
+
+	t.Run("explicit sharing keeps non-wildcard fetcher unassigned", func(t *testing.T) {
+		specificRG := baseMatcher
+		specificRG.ResourceGroups = []string{"rg1"}
+
+		fetchers := MatchersToAzureInstanceFetchers(
+			t.Context(),
+			logger,
+			[]types.AzureMatcher{specificRG},
+			nil,
+			"",
+			func(context.Context, string) ([]string, error) { return nil, nil },
+		)
+		ShareAzureVMPowerStates(t.Context(), logger, fetchers)
+
+		require.Len(t, fetchers, 1)
+		f := fetchers[0].(*azureInstanceFetcher)
+		require.Nil(t, f.vmPowerStates,
+			"non-wildcard resource group fetcher should skip power-state filtering")
+	})
+}
+
+func TestShareAzureVMPowerStates_CrossBatchDeduplication(t *testing.T) {
+	t.Parallel()
+
+	logger := slog.New(slog.DiscardHandler)
+
+	mkFetcher := func(integration, subscription, resourceGroup string) Fetcher[*AzureInstances] {
+		return &azureInstanceFetcher{
+			Integration:   integration,
+			Subscription:  subscription,
+			ResourceGroup: resourceGroup,
+		}
+	}
+
+	allFetchers := []Fetcher[*AzureInstances]{
+		mkFetcher("int-a", "sub-1", types.Wildcard),
+		mkFetcher("int-a", "sub-1", types.Wildcard),
+		mkFetcher("int-a", "sub-2", types.Wildcard),
+		mkFetcher("int-b", "sub-1", types.Wildcard),
+		mkFetcher("int-a", "sub-1", "rg-1"),
+	}
+
+	ShareAzureVMPowerStates(t.Context(), logger, allFetchers)
+
+	f0 := allFetchers[0].(*azureInstanceFetcher)
+	f1 := allFetchers[1].(*azureInstanceFetcher)
+	f2 := allFetchers[2].(*azureInstanceFetcher)
+	f3 := allFetchers[3].(*azureInstanceFetcher)
+	f4 := allFetchers[4].(*azureInstanceFetcher)
+
+	require.NotNil(t, f0.vmPowerStates)
+	require.NotNil(t, f1.vmPowerStates)
+	require.Same(t, f0.vmPowerStates, f1.vmPowerStates,
+		"same integration/subscription wildcard fetchers should share one status lookup")
+
+	require.NotNil(t, f2.vmPowerStates)
+	require.NotSame(t, f0.vmPowerStates, f2.vmPowerStates,
+		"different subscriptions should have independent status lookups")
+
+	require.NotNil(t, f3.vmPowerStates)
+	require.NotSame(t, f0.vmPowerStates, f3.vmPowerStates,
+		"different integrations should have independent status lookups")
+
+	require.Nil(t, f4.vmPowerStates,
+		"non-wildcard fetchers should skip power-state filtering")
+}
+
+func TestAzureWatcher_PowerStateFiltering(t *testing.T) {
+	t.Parallel()
+
+	const sub = "00000000-0000-0000-0000-000000000000"
+
+	buildVM := func(rg, name, powerState string) *armcompute.VirtualMachine {
+		statuses := []*armcompute.InstanceViewStatus{
+			{Code: to.Ptr("ProvisioningState/succeeded")},
+		}
+		if powerState != "" {
+			statuses = append(statuses,
+				&armcompute.InstanceViewStatus{
+					Code: to.Ptr("PowerState/" + powerState),
+				})
+		}
+		return &armcompute.VirtualMachine{
+			ID:       to.Ptr(makeAzureVMID(sub, rg, name)),
+			Name:     to.Ptr(name),
+			Location: to.Ptr("eastus"),
+			Properties: &armcompute.VirtualMachineProperties{
+				VMID: to.Ptr("vmid-" + name),
+				InstanceView: &armcompute.VirtualMachineInstanceView{
+					Statuses: statuses,
+				},
+			},
+		}
+	}
+
+	clients := mockClients{
+		vmClients: map[string]azure.VirtualMachinesClient{
+			sub: azure.NewVirtualMachinesClientByAPI(&azure.ARMComputeMock{
+				VirtualMachines: map[string][]*armcompute.VirtualMachine{
+					"rg1": {
+						buildVM("rg1", "vm-running", "running"),
+						buildVM("rg1", "vm-deallocated", "deallocated"),
+						buildVM("rg1", "vm-stopped", "stopped"),
+					},
+				},
+			}, nil),
+		},
+	}
+
+	logger := logtest.NewLogger()
+
+	t.Run("single wildcard matcher filters non-running VMs", func(t *testing.T) {
+		matcher := types.AzureMatcher{
+			Types:          []string{"vm"},
+			Subscriptions:  []string{sub},
+			ResourceGroups: []string{types.Wildcard},
+			Regions:        []string{types.Wildcard},
+			ResourceTags:   types.Labels{"*": []string{"*"}},
+		}
+
+		ctx, cancel := context.WithTimeout(t.Context(), 5*time.Second)
+		t.Cleanup(cancel)
+		watcher := NewWatcher[*AzureInstances](ctx)
+
+		const noDiscoveryConfig = ""
+		watcher.SetFetchers(noDiscoveryConfig,
+			MatchersToAzureInstanceFetchers(
+				t.Context(), logger,
+				[]types.AzureMatcher{matcher},
+				func(context.Context, string) (azure.Clients, error) {
+					return &clients, nil
+				},
+				noDiscoveryConfig,
+				func(context.Context, string) ([]string, error) {
+					return []string{sub}, nil
+				},
+			),
+		)
+		configuredFetchers, ok := watcher.fetcherMap.Load(noDiscoveryConfig)
+		require.True(t, ok)
+		ShareAzureVMPowerStates(t.Context(), logger, configuredFetchers)
+
+		go watcher.Run()
+		t.Cleanup(watcher.Stop)
+
+		var vmNames []string
+		select {
+		case results := <-watcher.InstancesC:
+			for _, vm := range results.Instances {
+				vmNames = append(vmNames, *vm.Name)
+			}
+		case <-ctx.Done():
+			require.Fail(t, "timed out waiting for watcher results")
+		}
+
+		require.ElementsMatch(t, []string{"vm-running"}, vmNames,
+			"only running VMs should pass through power-state filter")
+	})
+
+	t.Run("duplicate wildcard matchers still filter non-running VMs via shared status lookup", func(t *testing.T) {
+		matcher1 := types.AzureMatcher{
+			Types:          []string{"vm"},
+			Subscriptions:  []string{sub},
+			ResourceGroups: []string{types.Wildcard},
+			Regions:        []string{types.Wildcard},
+			ResourceTags:   types.Labels{"*": []string{"*"}},
+		}
+		matcher2 := matcher1
+
+		ctx, cancel := context.WithTimeout(t.Context(), 5*time.Second)
+		t.Cleanup(cancel)
+		watcher := NewWatcher[*AzureInstances](ctx)
+
+		const noDiscoveryConfig = ""
+		watcher.SetFetchers(noDiscoveryConfig,
+			MatchersToAzureInstanceFetchers(
+				t.Context(), logger,
+				[]types.AzureMatcher{matcher1, matcher2},
+				func(context.Context, string) (azure.Clients, error) {
+					return &clients, nil
+				},
+				noDiscoveryConfig,
+				func(context.Context, string) ([]string, error) {
+					return []string{sub}, nil
+				},
+			),
+		)
+		configuredFetchers, ok := watcher.fetcherMap.Load(noDiscoveryConfig)
+		require.True(t, ok)
+		ShareAzureVMPowerStates(t.Context(), logger, configuredFetchers)
+
+		go watcher.Run()
+		t.Cleanup(watcher.Stop)
+
+		// Both fetchers should produce results, but only running VMs.
+		var allVMNames []string
+		for i := 0; i < 2; i++ {
+			select {
+			case results := <-watcher.InstancesC:
+				for _, vm := range results.Instances {
+					allVMNames = append(allVMNames, *vm.Name)
+				}
+			case <-ctx.Done():
+				require.Fail(t, "timed out waiting for watcher results")
+			}
+		}
+
+		// Each fetcher returns only "vm-running", so we expect it
+		// twice. Crucially, vm-deallocated and vm-stopped must not
+		// appear.
+		require.ElementsMatch(t, []string{"vm-running", "vm-running"}, allVMNames,
+			"only running VMs should pass through, even with shared status lookup")
+	})
+}
+
+func TestAzureWatcher_FallbackLookupCap(t *testing.T) {
+	t.Parallel()
+
+	const sub = "00000000-0000-0000-0000-000000000000"
+
+	// Build VMs without InstanceView — these will be present in
+	// ListVirtualMachines but missing from ListVirtualMachineStatuses
+	// (which only returns VMs with parseable InstanceView power
+	// states). This forces fallback per-VM lookups in GetInstances.
+	//
+	// The mock's Get always returns GetResult, so we set GetResult
+	// to a stopped VM. Up to maxPowerStateFallbackLookupsPerFetch
+	// VMs will be looked up individually and filtered as stopped.
+	// VMs beyond the cap are passed through without checking
+	// (fail-open).
+	vmCount := maxPowerStateFallbackLookupsPerFetch + 3
+	var vms []*armcompute.VirtualMachine
+	for i := range vmCount {
+		name := fmt.Sprintf("vm-%02d", i)
+		vms = append(vms, &armcompute.VirtualMachine{
+			ID:       to.Ptr(makeAzureVMID(sub, "rg1", name)),
+			Name:     to.Ptr(name),
+			Location: to.Ptr("eastus"),
+			Properties: &armcompute.VirtualMachineProperties{
+				VMID: to.Ptr("vmid-" + name),
+				// No InstanceView — will be missing from bulk
+				// status map.
+			},
+		})
+	}
+
+	// Also add one running VM WITH InstanceView so it appears in the
+	// bulk map and passes through normally.
+	vms = append(vms, &armcompute.VirtualMachine{
+		ID:       to.Ptr(makeAzureVMID(sub, "rg1", "vm-running")),
+		Name:     to.Ptr("vm-running"),
+		Location: to.Ptr("eastus"),
+		Properties: &armcompute.VirtualMachineProperties{
+			VMID: to.Ptr("vmid-running"),
+			InstanceView: &armcompute.VirtualMachineInstanceView{
+				Statuses: []*armcompute.InstanceViewStatus{
+					{Code: to.Ptr("PowerState/running")},
+				},
+			},
+		},
+	})
+
+	mockAPI := &azure.ARMComputeMock{
+		VirtualMachines: map[string][]*armcompute.VirtualMachine{
+			"rg1": vms,
+		},
+		// Per-VM fallback calls Get, which returns this result.
+		// Stopped state means the first 10 fallback VMs get filtered.
+		GetResult: armcompute.VirtualMachine{
+			Properties: &armcompute.VirtualMachineProperties{
+				InstanceView: &armcompute.VirtualMachineInstanceView{
+					Statuses: []*armcompute.InstanceViewStatus{
+						{Code: to.Ptr("PowerState/stopped")},
+					},
+				},
+			},
+		},
+	}
+
+	clients := mockClients{
+		vmClients: map[string]azure.VirtualMachinesClient{
+			sub: azure.NewVirtualMachinesClientByAPI(mockAPI, nil),
+		},
+	}
+
+	fetcher := newAzureInstanceFetcher(azureFetcherConfig{
+		Matcher: types.AzureMatcher{
+			Types:        []string{"vm"},
+			Regions:      []string{types.Wildcard},
+			ResourceTags: types.Labels{"*": []string{"*"}},
+		},
+		Subscription:  sub,
+		ResourceGroup: types.Wildcard,
+		AzureClientGetter: func(ctx context.Context, integration string) (azure.Clients, error) {
+			return &clients, nil
+		},
+		Logger: logtest.NewLogger(),
+	})
+	// Assign a vmPowerStates so power filtering is active.
+	fetcher.vmPowerStates = &vmPowerStates{}
+
+	results, err := fetcher.GetInstances(t.Context(), false)
+	require.NoError(t, err)
+
+	var names []string
+	for _, group := range results {
+		for _, vm := range group.Instances {
+			names = append(names, *vm.Name)
+		}
+	}
+
+	// Expected:
+	// - "vm-running" passes via bulk status map.
+	// - maxPowerStateFallbackLookupsPerFetch VMs are looked up
+	//   individually (all return stopped → filtered out).
+	// - Remaining no-InstanceView VMs exceed the cap and are
+	//   passed through without a power-state check (fail-open).
+	require.Contains(t, names, "vm-running",
+		"VM with running state in bulk map should pass through")
+
+	beyondCap := vmCount - maxPowerStateFallbackLookupsPerFetch
+	// 1 (vm-running) + beyondCap (fail-open VMs)
+	require.Len(t, names, 1+beyondCap,
+		"result should contain the running VM plus only the VMs that exceeded the fallback cap")
 }
 
 func makeAzureNode(t *testing.T, name, subscriptionID, vmID string) types.Server {
