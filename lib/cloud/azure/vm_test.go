@@ -25,6 +25,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v6"
+	"github.com/gravitational/trace"
 	"github.com/stretchr/testify/require"
 
 	"github.com/gravitational/teleport/api/types"
@@ -280,7 +281,7 @@ func TestListVirtualMachines(t *testing.T) {
 			wantIDs:       []string{"vm1", "vm2"},
 		},
 		{
-			name:          "nonexistant resource group",
+			name:          "nonexistent resource group",
 			resourceGroup: "rgfake",
 			wantIDs:       []string{},
 		},
@@ -304,4 +305,458 @@ func TestListVirtualMachines(t *testing.T) {
 			require.ElementsMatch(t, tc.wantIDs, vmIDs)
 		})
 	}
+}
+
+func TestParsePowerState(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name     string
+		statuses []*armcompute.InstanceViewStatus
+		want     PowerStateResult
+	}{
+		{
+			name: "running",
+			statuses: []*armcompute.InstanceViewStatus{
+				{Code: to.Ptr("ProvisioningState/succeeded")},
+				{Code: to.Ptr("PowerState/running")},
+			},
+			want: PowerStateResult{State: PowerStateRunning, Found: true},
+		},
+		{
+			name: "deallocated",
+			statuses: []*armcompute.InstanceViewStatus{
+				{Code: to.Ptr("PowerState/deallocated")},
+			},
+			want: PowerStateResult{State: PowerStateDeallocated, Found: true},
+		},
+		{
+			name: "stopped",
+			statuses: []*armcompute.InstanceViewStatus{
+				{Code: to.Ptr("PowerState/stopped")},
+			},
+			want: PowerStateResult{State: PowerStateStopped, Found: true},
+		},
+		{
+			name: "unrecognized power state returns other",
+			statuses: []*armcompute.InstanceViewStatus{
+				{Code: to.Ptr("PowerState/starting")},
+			},
+			want: PowerStateResult{State: PowerStateOther, Found: true},
+		},
+		{
+			name: "no power state status",
+			statuses: []*armcompute.InstanceViewStatus{
+				{Code: to.Ptr("ProvisioningState/succeeded")},
+			},
+			want: PowerStateResult{},
+		},
+		{
+			name:     "empty statuses",
+			statuses: []*armcompute.InstanceViewStatus{},
+			want:     PowerStateResult{},
+		},
+		{
+			name:     "nil statuses",
+			statuses: nil,
+			want:     PowerStateResult{},
+		},
+		{
+			name: "nil status entry",
+			statuses: []*armcompute.InstanceViewStatus{
+				nil,
+				{Code: to.Ptr("PowerState/running")},
+			},
+			want: PowerStateResult{State: PowerStateRunning, Found: true},
+		},
+		{
+			name: "nil code",
+			statuses: []*armcompute.InstanceViewStatus{
+				{Code: nil},
+			},
+			want: PowerStateResult{},
+		},
+		{
+			name: "first power state wins even if unrecognized",
+			statuses: []*armcompute.InstanceViewStatus{
+				{Code: to.Ptr("PowerState/stopping")},
+				{Code: to.Ptr("PowerState/running")},
+			},
+			want: PowerStateResult{State: PowerStateOther, Found: true},
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			got := ParsePowerState(tc.statuses)
+			require.Equal(t, tc.want, got)
+		})
+	}
+}
+
+func Test_vmOSType(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name string
+		vm   *armcompute.VirtualMachine
+		want string
+	}{
+		{
+			name: "linux",
+			vm: &armcompute.VirtualMachine{
+				Properties: &armcompute.VirtualMachineProperties{
+					StorageProfile: &armcompute.StorageProfile{
+						OSDisk: &armcompute.OSDisk{
+							OSType: to.Ptr(armcompute.OperatingSystemTypesLinux),
+						},
+					},
+				},
+			},
+			want: string(armcompute.OperatingSystemTypesLinux),
+		},
+		{
+			name: "windows",
+			vm: &armcompute.VirtualMachine{
+				Properties: &armcompute.VirtualMachineProperties{
+					StorageProfile: &armcompute.StorageProfile{
+						OSDisk: &armcompute.OSDisk{
+							OSType: to.Ptr(armcompute.OperatingSystemTypesWindows),
+						},
+					},
+				},
+			},
+			want: string(armcompute.OperatingSystemTypesWindows),
+		},
+		{
+			name: "nil properties",
+			vm:   &armcompute.VirtualMachine{},
+			want: "",
+		},
+		{
+			name: "nil storage profile",
+			vm: &armcompute.VirtualMachine{
+				Properties: &armcompute.VirtualMachineProperties{},
+			},
+			want: "",
+		},
+		{
+			name: "nil os disk",
+			vm: &armcompute.VirtualMachine{
+				Properties: &armcompute.VirtualMachineProperties{
+					StorageProfile: &armcompute.StorageProfile{},
+				},
+			},
+			want: "",
+		},
+		{
+			name: "nil os type",
+			vm: &armcompute.VirtualMachine{
+				Properties: &armcompute.VirtualMachineProperties{
+					StorageProfile: &armcompute.StorageProfile{
+						OSDisk: &armcompute.OSDisk{},
+					},
+				},
+			},
+			want: "",
+		},
+		{
+			name: "nil vm",
+			vm:   nil,
+			want: "",
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			got := vmOSType(tc.vm)
+			require.Equal(t, tc.want, got)
+		})
+	}
+}
+
+func TestFilterLinuxVMs(t *testing.T) {
+	t.Parallel()
+
+	linuxVM := &armcompute.VirtualMachine{
+		Name: to.Ptr("linux-vm"),
+		ID:   to.Ptr("/sub/rg/linux-vm"),
+		Properties: &armcompute.VirtualMachineProperties{
+			StorageProfile: &armcompute.StorageProfile{
+				OSDisk: &armcompute.OSDisk{
+					OSType: to.Ptr(armcompute.OperatingSystemTypesLinux),
+				},
+			},
+		},
+	}
+	windowsVM := &armcompute.VirtualMachine{
+		Name: to.Ptr("windows-vm"),
+		ID:   to.Ptr("/sub/rg/windows-vm"),
+		Properties: &armcompute.VirtualMachineProperties{
+			StorageProfile: &armcompute.StorageProfile{
+				OSDisk: &armcompute.OSDisk{
+					OSType: to.Ptr(armcompute.OperatingSystemTypesWindows),
+				},
+			},
+		},
+	}
+	unknownOSVM := &armcompute.VirtualMachine{
+		Name: to.Ptr("unknown-vm"),
+		ID:   to.Ptr("/sub/rg/unknown-vm"),
+	}
+	nilOSDiskVM := &armcompute.VirtualMachine{
+		Name: to.Ptr("nil-osdisk-vm"),
+		ID:   to.Ptr("/sub/rg/nil-osdisk-vm"),
+		Properties: &armcompute.VirtualMachineProperties{
+			StorageProfile: &armcompute.StorageProfile{
+				OSDisk: &armcompute.OSDisk{},
+			},
+		},
+	}
+
+	tests := []struct {
+		name        string
+		input       []*armcompute.VirtualMachine
+		wantLinux   []*armcompute.VirtualMachine
+		wantSkipped []SkippedVM
+	}{
+		{
+			name:        "nil input",
+			input:       nil,
+			wantLinux:   nil,
+			wantSkipped: nil,
+		},
+		{
+			name:        "empty input",
+			input:       []*armcompute.VirtualMachine{},
+			wantLinux:   nil,
+			wantSkipped: nil,
+		},
+		{
+			name:      "nil entry in slice is skipped",
+			input:     []*armcompute.VirtualMachine{nil, linuxVM},
+			wantLinux: []*armcompute.VirtualMachine{linuxVM},
+		},
+		{
+			name:      "all linux",
+			input:     []*armcompute.VirtualMachine{linuxVM},
+			wantLinux: []*armcompute.VirtualMachine{linuxVM},
+		},
+		{
+			name:  "all windows",
+			input: []*armcompute.VirtualMachine{windowsVM},
+			wantSkipped: []SkippedVM{
+				{VM: windowsVM, OSType: "Windows"},
+			},
+		},
+		{
+			name:      "unknown OS allowed through",
+			input:     []*armcompute.VirtualMachine{unknownOSVM},
+			wantLinux: []*armcompute.VirtualMachine{unknownOSVM},
+		},
+		{
+			name:      "nil OSDisk.OSType allowed through",
+			input:     []*armcompute.VirtualMachine{nilOSDiskVM},
+			wantLinux: []*armcompute.VirtualMachine{nilOSDiskVM},
+		},
+		{
+			name: "mixed linux, windows, and unknown",
+			input: []*armcompute.VirtualMachine{
+				linuxVM, windowsVM, unknownOSVM,
+			},
+			wantLinux: []*armcompute.VirtualMachine{
+				linuxVM, unknownOSVM,
+			},
+			wantSkipped: []SkippedVM{
+				{VM: windowsVM, OSType: "Windows"},
+			},
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			got := FilterLinuxVMs(tc.input)
+			require.Equal(t, tc.wantLinux, got.Linux)
+			require.Equal(t, tc.wantSkipped, got.Skipped)
+		})
+	}
+}
+
+func TestListVirtualMachineStatuses(t *testing.T) {
+	t.Parallel()
+
+	mockAPI := &ARMComputeMock{
+		RequireStatusOnly: true,
+		VirtualMachines: map[string][]*armcompute.VirtualMachine{
+			"rg1": {
+				{
+					ID: to.Ptr("/sub/rg1/vm1"),
+					Properties: &armcompute.VirtualMachineProperties{
+						VMID: to.Ptr("vmid-1"),
+						InstanceView: &armcompute.VirtualMachineInstanceView{
+							Statuses: []*armcompute.InstanceViewStatus{
+								{Code: to.Ptr("PowerState/running")},
+							},
+						},
+					},
+				},
+				{
+					ID: to.Ptr("/sub/rg1/vm2"),
+					Properties: &armcompute.VirtualMachineProperties{
+						VMID: to.Ptr("vmid-2"),
+						InstanceView: &armcompute.VirtualMachineInstanceView{
+							Statuses: []*armcompute.InstanceViewStatus{
+								{Code: to.Ptr("PowerState/deallocated")},
+							},
+						},
+					},
+				},
+				{
+					ID: to.Ptr("/sub/rg1/vm3"),
+					Properties: &armcompute.VirtualMachineProperties{
+						VMID: to.Ptr("vmid-3"),
+						// nil InstanceView — VM should be excluded from the status map.
+					},
+				},
+				{
+					ID: to.Ptr("/sub/rg1/vm4"),
+					Properties: &armcompute.VirtualMachineProperties{
+						VMID: to.Ptr("vmid-4"),
+						InstanceView: &armcompute.VirtualMachineInstanceView{
+							Statuses: []*armcompute.InstanceViewStatus{
+								{Code: to.Ptr("PowerState/starting")},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	client := NewVirtualMachinesClientByAPI(mockAPI, nil)
+
+	t.Run("wildcard returns full status map keyed by resource ID", func(t *testing.T) {
+		states, err := client.ListVirtualMachineStatuses(
+			t.Context(), types.Wildcard)
+		require.NoError(t, err)
+		// vm3 has nil InstanceView → excluded.
+		// vm4 has unrecognized "starting" → included as PowerStateOther.
+		require.Equal(t, map[string]PowerState{
+			"/sub/rg1/vm1": PowerStateRunning,
+			"/sub/rg1/vm2": PowerStateDeallocated,
+			"/sub/rg1/vm4": PowerStateOther,
+		}, states)
+	})
+
+	t.Run("specific resource group returns error", func(t *testing.T) {
+		_, err := client.ListVirtualMachineStatuses(
+			t.Context(), "rg1")
+		require.Error(t, err)
+		require.True(t, trace.IsBadParameter(err))
+	})
+}
+
+func TestGetVMPowerState(t *testing.T) {
+	t.Parallel()
+
+	t.Run("returns power state result", func(t *testing.T) {
+		mockAPI := &ARMComputeMock{
+			GetResult: armcompute.VirtualMachine{
+				Properties: &armcompute.VirtualMachineProperties{
+					InstanceView: &armcompute.VirtualMachineInstanceView{
+						Statuses: []*armcompute.InstanceViewStatus{
+							{Code: to.Ptr("ProvisioningState/succeeded")},
+							{Code: to.Ptr("PowerState/running")},
+						},
+					},
+				},
+			},
+		}
+
+		client := NewVirtualMachinesClientByAPI(mockAPI, nil)
+
+		result, err := client.GetVMPowerState(
+			t.Context(), "rg1", "vm1")
+		require.NoError(t, err)
+		require.True(t, result.Found)
+		require.Equal(t, PowerStateRunning, result.State)
+	})
+
+	t.Run("API failure returns error", func(t *testing.T) {
+		mockAPI := &ARMComputeMock{
+			GetErr: fmt.Errorf("network timeout"),
+		}
+
+		client := NewVirtualMachinesClientByAPI(mockAPI, nil)
+
+		_, err := client.GetVMPowerState(
+			t.Context(), "rg1", "vm1")
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "network timeout")
+		require.NotErrorIs(t, err, ErrNoInstanceView)
+		require.NotErrorIs(t, err, ErrNoPowerState)
+	})
+
+	t.Run("nil Properties returns ErrNoInstanceView", func(t *testing.T) {
+		mockAPI := &ARMComputeMock{
+			GetResult: armcompute.VirtualMachine{},
+		}
+
+		client := NewVirtualMachinesClientByAPI(mockAPI, nil)
+
+		_, err := client.GetVMPowerState(
+			t.Context(), "rg1", "vm1")
+		require.ErrorIs(t, err, ErrNoInstanceView)
+	})
+
+	t.Run("nil InstanceView returns ErrNoInstanceView", func(t *testing.T) {
+		mockAPI := &ARMComputeMock{
+			GetResult: armcompute.VirtualMachine{
+				Properties: &armcompute.VirtualMachineProperties{},
+			},
+		}
+
+		client := NewVirtualMachinesClientByAPI(mockAPI, nil)
+
+		_, err := client.GetVMPowerState(
+			t.Context(), "rg1", "vm1")
+		require.ErrorIs(t, err, ErrNoInstanceView)
+	})
+
+	t.Run("no PowerState entry returns ErrNoPowerState", func(t *testing.T) {
+		mockAPI := &ARMComputeMock{
+			GetResult: armcompute.VirtualMachine{
+				Properties: &armcompute.VirtualMachineProperties{
+					InstanceView: &armcompute.VirtualMachineInstanceView{
+						Statuses: []*armcompute.InstanceViewStatus{
+							{Code: to.Ptr("ProvisioningState/succeeded")},
+						},
+					},
+				},
+			},
+		}
+
+		client := NewVirtualMachinesClientByAPI(mockAPI, nil)
+
+		_, err := client.GetVMPowerState(
+			t.Context(), "rg1", "vm1")
+		require.ErrorIs(t, err, ErrNoPowerState)
+	})
+
+	t.Run("unrecognized power state returns PowerStateOther", func(t *testing.T) {
+		mockAPI := &ARMComputeMock{
+			GetResult: armcompute.VirtualMachine{
+				Properties: &armcompute.VirtualMachineProperties{
+					InstanceView: &armcompute.VirtualMachineInstanceView{
+						Statuses: []*armcompute.InstanceViewStatus{
+							{Code: to.Ptr("PowerState/starting")},
+						},
+					},
+				},
+			},
+		}
+
+		client := NewVirtualMachinesClientByAPI(mockAPI, nil)
+
+		result, err := client.GetVMPowerState(
+			t.Context(), "rg1", "vm1")
+		require.NoError(t, err)
+		require.True(t, result.Found)
+		require.Equal(t, PowerStateOther, result.State)
+	})
 }

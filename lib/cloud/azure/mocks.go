@@ -489,9 +489,10 @@ func (m *ARMKubernetesMock) BeginRunCommand(ctx context.Context, resourceGroupNa
 
 // ARMComputeMock mocks armcompute.VirtualMachinesClient.
 type ARMComputeMock struct {
-	VirtualMachines map[string][]*armcompute.VirtualMachine
-	GetResult       armcompute.VirtualMachine
-	GetErr          error
+	VirtualMachines   map[string][]*armcompute.VirtualMachine
+	GetResult         armcompute.VirtualMachine
+	GetErr            error
+	RequireStatusOnly bool
 }
 
 func (m *ARMComputeMock) NewListPager(resourceGroup string, _ *armcompute.VirtualMachinesClientListOptions) *runtime.Pager[armcompute.VirtualMachinesClientListResponse] {
@@ -513,7 +514,7 @@ func (m *ARMComputeMock) NewListPager(resourceGroup string, _ *armcompute.Virtua
 	})
 }
 
-func (m *ARMComputeMock) NewListAllPager(_ *armcompute.VirtualMachinesClientListAllOptions) *runtime.Pager[armcompute.VirtualMachinesClientListAllResponse] {
+func (m *ARMComputeMock) NewListAllPager(opts *armcompute.VirtualMachinesClientListAllOptions) *runtime.Pager[armcompute.VirtualMachinesClientListAllResponse] {
 	var vms []*armcompute.VirtualMachine
 	for _, resourceGroupVMs := range m.VirtualMachines {
 		vms = append(vms, resourceGroupVMs...)
@@ -523,6 +524,11 @@ func (m *ARMComputeMock) NewListAllPager(_ *armcompute.VirtualMachinesClientList
 			return page.NextLink != nil && len(*page.NextLink) > 0
 		},
 		Fetcher: func(ctx context.Context, page *armcompute.VirtualMachinesClientListAllResponse) (armcompute.VirtualMachinesClientListAllResponse, error) {
+			if m.RequireStatusOnly {
+				if opts == nil || opts.StatusOnly == nil || *opts.StatusOnly != "true" {
+					return armcompute.VirtualMachinesClientListAllResponse{}, trace.BadParameter("StatusOnly=true required")
+				}
+			}
 			return armcompute.VirtualMachinesClientListAllResponse{
 				VirtualMachineListResult: armcompute.VirtualMachineListResult{
 					Value: vms,
