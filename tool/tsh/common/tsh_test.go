@@ -4835,7 +4835,7 @@ func TestSerializeDatabases(t *testing.T) {
     "metadata": {
       "name": "my-db",
       "description": "this is the description",
-      "labels": {"a": "1", "b": "2"}
+      "labels": {"a": "1", "b": "2", "teleport.internal/vnet-dns-name": "` + types.VNetDNSName("my-db") + `"}
     },
     "spec": {
       "protocol": "mongodb",
