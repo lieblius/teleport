@@ -39,7 +39,7 @@ type Client struct {
 // New creates and connects a new Client based on opts.
 //
 //nolint:staticcheck // SA4023. False positive, depends on build tags.
-func New(_ *tdp.Conn, cfg Config) (*Client, error) {
+func New(_ *tdp.Conn, _ *tdpb.Hello, cfg Config) (*Client, error) {
 	return nil, errors.New("the real rdpclient.Client implementation was not included in this build")
 }
 
