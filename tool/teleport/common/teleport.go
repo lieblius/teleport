@@ -115,7 +115,8 @@ func Run(options Options) (app *kingpin.Application, executedCommand string, con
 	exec := app.Command(reexecconstants.ExecSubCommand, "Used internally by Teleport to re-exec itself to run a command.").Hidden()
 	networking := app.Command(reexecconstants.NetworkingSubCommand, "Used internally by Teleport to re-exec itself to handle networking requests.").Hidden()
 	checkHomeDir := app.Command(reexecconstants.CheckHomeDirSubCommand, "Used internally by Teleport to re-exec itself to check access to a directory.").Hidden()
-	park := app.Command(reexecconstants.ParkSubCommand, "Used internally by Teleport to re-exec itself to do nothing.").Hidden()
+	park := app.Command(reexecconstants.ParkSubCommand, "Used internally by Teleport to re-exec itself to do nothing, forever.").Hidden()
+	trueCmd := app.Command(reexecconstants.TrueSubCommand, "Used internally by Teleport to re-exec itself to do nothing, successfully.").Hidden()
 	app.HelpFlag.Short('h')
 
 	// define start flags:
@@ -758,6 +759,8 @@ Examples:
 		reexec.RunAndExit(reexecconstants.CheckHomeDirSubCommand)
 	case park.FullCommand():
 		reexec.RunAndExit(reexecconstants.ParkSubCommand)
+	case trueCmd.FullCommand():
+		reexec.RunAndExit(reexecconstants.TrueSubCommand)
 	case sftp.FullCommand():
 		reexec.RunAndExit(reexecconstants.SFTPSubCommand)
 
