@@ -1694,6 +1694,47 @@ message AccessRequestExpire {
   ];
 }
 
+// AppSessionExpire is emitted when an application session has expired.
+message AppSessionExpire {
+  // Metadata is a common event metadata
+  Metadata Metadata = 1 [
+    (gogoproto.nullable) = false,
+    (gogoproto.embed) = true,
+    (gogoproto.jsontag) = ""
+  ];
+
+  // ResourceMetadata is a common resource event metadata
+  ResourceMetadata Resource = 2 [
+    (gogoproto.nullable) = false,
+    (gogoproto.embed) = true,
+    (gogoproto.jsontag) = ""
+  ];
+
+  // AppMetadata is a common application metadata
+  AppMetadata App = 3 [
+    (gogoproto.nullable) = false,
+    (gogoproto.embed) = true,
+    (gogoproto.jsontag) = ""
+  ];
+
+  // UserMetadata is a common user event metadata
+  UserMetadata User = 4 [
+    (gogoproto.nullable) = false,
+    (gogoproto.embed) = true,
+    (gogoproto.jsontag) = ""
+  ];
+
+  // SessionID is application session ID
+  string SessionID = 5 [(gogoproto.jsontag) = "id"];
+
+  // ResourceExpiry is the time at which the application session resource will expire.
+  google.protobuf.Timestamp ResourceExpiry = 6 [
+    (gogoproto.stdtime) = true,
+    (gogoproto.nullable) = true,
+    (gogoproto.jsontag) = "expiry,omitempty"
+  ];
+}
+
 // ResourceID is a unique identifier for a teleport resource. This is duplicated
 // from api/types/types.proto to decouple the api and events types and because
 // neither file currently imports the other.
@@ -5017,6 +5058,7 @@ message OneOf {
     events.InferencePolicyDelete InferencePolicyDelete = 246;
     events.SessionSummarized SessionSummarized = 247;
     events.CertAuthorityOverrideEvent CertAuthorityOverrideEvent = 248;
+    events.AppSessionExpire AppSessionExpire = 249;
   }
 }
 

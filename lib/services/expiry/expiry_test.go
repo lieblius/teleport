@@ -189,6 +189,44 @@ func TestExpiryPendingGracePeriod(t *testing.T) {
 	})
 }
 
+func TestAppSessionExpiry(t *testing.T) {
+	t.Parallel()
+	synctest.Test(t, func(t *testing.T) {
+		ctx := t.Context()
+
+		expiry, authServer, emitter := setupExpiryService(t)
+		go func() {
+			err := expiry.Run(ctx)
+			require.NoError(t, err)
+		}()
+
+		const expiry1 = 5 * scanInterval
+		const expiry2 = 10 * scanInterval
+
+		createAppSession(t, authServer, "alice", time.Now().Add(expiry1))
+		createAppSession(t, authServer, "bob", time.Now().Add(expiry2))
+
+		synctest.Wait()
+		require.Len(t, mustListAppSessions(t, authServer), 2)
+		require.Empty(t, emitter.Events())
+
+		time.Sleep(expiry1 + scanInterval*2)
+		synctest.Wait()
+
+		sessions := mustListAppSessions(t, authServer)
+		require.Len(t, sessions, 1)
+		require.Equal(t, "bob", sessions[0].GetUser())
+
+		require.Len(t, emitter.Events(), 1)
+
+		time.Sleep(expiry2)
+		synctest.Wait()
+
+		require.Empty(t, mustListAppSessions(t, authServer))
+		require.Len(t, emitter.Events(), 2)
+	})
+}
+
 func setupExpiryService(t *testing.T) (*Service, *auth.Server, *eventstest.MockRecorderEmitter) {
 	t.Helper()
 
@@ -232,6 +270,23 @@ func createAccessRequest(t *testing.T, auth *auth.Server, state types.RequestSta
 	return req
 }
 
+func createAppSession(t *testing.T, auth *auth.Server, user string, expiry time.Time) types.WebSession {
+	t.Helper()
+	ctx := t.Context()
+
+	session, err := types.NewWebSession(user, types.KindAppSession, types.WebSessionSpecV2{
+		User:    user,
+		Expires: expiry,
+	})
+	require.NoError(t, err)
+	// session.SetExpiry(expiry)
+
+	err = auth.UpsertAppSession(ctx, session)
+	require.NoError(t, err)
+
+	return session
+}
+
 func mustListAccessRequests(t *testing.T, auth *auth.Server) []*types.AccessRequestV3 {
 	t.Helper()
 	ctx := t.Context()
@@ -241,4 +296,14 @@ func mustListAccessRequests(t *testing.T, auth *auth.Server) []*types.AccessRequ
 	require.Empty(t, resp.NextKey)
 
 	return resp.AccessRequests
+}
+
+func mustListAppSessions(t *testing.T, auth *auth.Server) []types.WebSession {
+	t.Helper()
+	ctx := t.Context()
+
+	resp, _, err := auth.Services.ListAppSessions(ctx, 100, "", "")
+	require.NoError(t, err)
+
+	return resp
 }

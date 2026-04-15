@@ -39,14 +39,14 @@ const (
 	semaphoreName       = "auth.expiry"
 	semaphoreExpiration = time.Minute * 5
 
-	// scanInterval is the interval at which the expiry checker scans for access requests.
+	// scanInterval is the interval at which the expiry checker scans for resource.
 	scanInterval = time.Minute * 5
 
-	// pendingRequestGracePeriod is the grace period used when checking a pending request's expiry
-	// as the expiry time may be extended on approval.
+	// pendingRequestGracePeriod is a grace period specifically for pending access requests.
+	// This is allowed because a request's expiry may be extended on approval
 	pendingRequestGracePeriod = time.Second * 40
 
-	// maxExpiresPerCycle is an arbitrary limit on the number of requests to expire per cycle
+	// maxExpiresPerCycle is an arbitrary limit on the number of resources to expire per cycle
 	// to prevent any one auth server holding the lease for more than a couple of minutes.
 	maxExpiresPerCycle = 120
 )
@@ -63,6 +63,12 @@ type AccessPoint interface {
 
 	// DeleteAccessRequest deletes an access request.
 	DeleteAccessRequest(ctx context.Context, reqID string) error
+
+	// ListExpiredAppSessions lists all application sessions that are expired.
+	ListExpiredAppSessions(ctx context.Context, limit int, pageToken string) ([]types.WebSession, string, error)
+
+	// DeleteAppSession removes an application web session.
+	DeleteAppSession(ctx context.Context, req types.DeleteAppSessionRequest) error
 }
 
 // Config provides configuration for the expiry server.
@@ -178,6 +184,7 @@ func (s *Service) loop(ctx context.Context, intervalCfg interval.Config) error {
 			return nil
 		case <-interval.Next():
 			s.processRequests(ctx)
+			s.processAppSessions(ctx)
 		}
 	}
 }
@@ -216,6 +223,34 @@ func (s *Service) processRequests(ctx context.Context) {
 	s.Log.DebugContext(ctx, "Successfully cleaned up expired access requests.", "count", requestsExpired)
 }
 
+func (s *Service) processAppSessions(ctx context.Context) {
+	s.Log.DebugContext(ctx, "Cleaning up expired application sessions.")
+
+	sessionsExpired := 0
+	for expiredSession, err := range clientutils.Resources(ctx, s.AccessPoint.ListExpiredAppSessions) {
+		if err != nil {
+			s.Log.ErrorContext(ctx, "Error listing expired application sessions.", "error", err)
+			return
+		}
+
+		sessionsExpired++
+		s.Log.DebugContext(ctx, "Expiring application session.",
+			"user", expiredSession.GetUser(),
+			"session_id", expiredSession.GetName())
+
+		if err := s.expireAppSession(ctx, expiredSession); err != nil {
+			s.Log.ErrorContext(ctx, "Error expiring application session.", "error", err)
+			continue
+		}
+
+		if sessionsExpired >= maxExpiresPerCycle {
+			s.Log.DebugContext(ctx, "Cleaned up maximum amount of expired application sessions. Will continue in the next run.", "max", maxExpiresPerCycle)
+			return
+		}
+	}
+	s.Log.DebugContext(ctx, "Successfully cleaned up expired application sessions.", "count", sessionsExpired)
+}
+
 func (s *Service) expireRequest(ctx context.Context, req types.AccessRequest) error {
 	expiry := req.Expiry()
 	event := &apievents.AccessRequestExpire{
@@ -238,6 +273,40 @@ func (s *Service) expireRequest(ctx context.Context, req types.AccessRequest) er
 	if err := s.AccessPoint.DeleteAccessRequest(ctx, req.GetName()); err != nil {
 		if trace.IsNotFound(err) {
 			s.Log.InfoContext(ctx, "access request was already deleted", "request", req.GetName())
+			return nil
+		}
+		return trace.Wrap(err)
+	}
+	return nil
+}
+
+func (s *Service) expireAppSession(ctx context.Context, sess types.WebSession) error {
+	expiry := sess.Expiry()
+	event := &apievents.AppSessionExpire{
+		Metadata: apievents.Metadata{
+			Type: events.AppSessionExpireEvent,
+			Code: events.AppSessionExpireCode,
+		},
+		ResourceMetadata: apievents.ResourceMetadata{
+			Expires: sess.GetExpiryTime(),
+		},
+		AppMetadata:    apievents.AppMetadata{},
+		UserMetadata:   apievents.UserMetadata{},
+		SessionID:      sess.GetName(),
+		ResourceExpiry: &expiry,
+	}
+
+	// Emit expiry event before deletion as we know the session is expired here
+	// but the deletion may fail.
+	if err := s.Emitter.EmitAuditEvent(ctx, event); err != nil {
+		return trace.Wrap(err)
+	}
+
+	if err := s.AccessPoint.DeleteAppSession(ctx, types.DeleteAppSessionRequest{
+		SessionID: sess.GetName(),
+	}); err != nil {
+		if trace.IsNotFound(err) {
+			s.Log.InfoContext(ctx, "application session was already deleted", "session_id", sess.GetName())
 			return nil
 		}
 		return trace.Wrap(err)

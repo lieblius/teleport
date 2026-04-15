@@ -515,6 +515,11 @@ func (c *Client) UpsertAppSession(ctx context.Context, session types.WebSession)
 	return trace.NotImplemented(notImplementedMessage)
 }
 
+// ListExpiredAppSessions not implemented: can only be called locally.
+func (c *Client) ListExpiredAppSessions(ctx context.Context, limit int, pageToken string) ([]types.WebSession, string, error) {
+	return nil, "", trace.NotImplemented(notImplementedMessage)
+}
+
 // UpsertSnowflakeSession not implemented: can only be called locally.
 func (c *Client) UpsertSnowflakeSession(_ context.Context, _ types.WebSession) error {
 	return trace.NotImplemented(notImplementedMessage)
