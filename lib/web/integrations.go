@@ -684,7 +684,8 @@ func collectAutoDiscoveryRulesFromDiscoveryConfig(dc *discoveryconfig.DiscoveryC
 					LastSync:        lastSync,
 				}
 				if resourceType == "eks" {
-					rule.KubeAppDiscovery = &matcher.KubeAppDiscovery
+					kubeAppDiscovery := matcher.KubeAppDiscovery
+					rule.KubeAppDiscovery = &kubeAppDiscovery
 				}
 				ret = append(ret, rule)
 			}

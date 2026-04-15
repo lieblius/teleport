@@ -148,16 +148,6 @@ export function SettingsTab({
         <Flex pt={3}>
           <Box flex="1">
             <Card p={4} mb={3}>
-              <InfoAlert
-                mb={3}
-                details="Review the prerequisites and setup requirements before configuring this integration."
-                primaryAction={{
-                  content: 'View Info Guide',
-                  onClick: () => onInfoGuideTabChange('info'),
-                }}
-              >
-                Before You Begin
-              </InfoAlert>
               <Box mb={4}>
                 <IntegrationSection
                   integrationName={integrationName}

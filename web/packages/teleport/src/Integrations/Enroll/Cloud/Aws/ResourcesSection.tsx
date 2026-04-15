@@ -74,6 +74,10 @@ const requiredRegions =
     };
   };
 
+const fieldWidth = 400;
+// tags needs additional room for the close X on the right.
+const tagsWidth = fieldWidth + 32;
+
 type ResourcesSectionProps = {
   configs: ServiceConfigs;
   onConfigChange: (type: ServiceType, patch: Partial<ServiceConfig>) => void;
@@ -183,7 +187,7 @@ function AwsService({
       />
       {config.enabled && (
         <Box ml={4}>
-          <Box mb={3}>
+          <Box mb={3} width={fieldWidth}>
             <RegionSelect
               isMulti={true}
               options={awsRegionOptionGroups}
@@ -212,7 +216,7 @@ function AwsService({
           </TagsButton>
           {tagsExpanded && (
             <Box mb={2}>
-              <Box width={400}>
+              <Box width={tagsWidth}>
                 <LabelsInput
                   adjective="tag"
                   labels={config.tags as Label[]}

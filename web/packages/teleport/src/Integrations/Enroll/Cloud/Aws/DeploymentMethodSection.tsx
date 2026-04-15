@@ -113,7 +113,9 @@ export function DeploymentMethodSection({
                 </Flex>
               </ExternalLink>
             </Text>
-            <Text mt={1}>Renew the Teleport credentials for Terraform.</Text>
+            <Text mt={1}>
+              Generate temporary bot Teleport credentials for Terraform.
+            </Text>
             <TextSelectCopyMulti
               lines={[
                 {
