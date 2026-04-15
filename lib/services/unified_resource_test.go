@@ -196,6 +196,7 @@ func TestUnifiedResourceWatcher(t *testing.T) {
 		cmpopts.IgnoreFields(types.Metadata{}, "Revision"),
 		cmpopts.IgnoreFields(header.Metadata{}, "Revision"),
 		cmpopts.IgnoreFields(types.AppServerSpecV3{}, "ComponentFeatures"),
+		cmpopts.IgnoreFields(types.DatabaseServerSpecV3{}, "ComponentFeatures"),
 		// Ignore order.
 		cmpopts.SortSlices(func(a, b types.ResourceWithLabels) bool { return a.GetName() < b.GetName() }),
 	))
@@ -229,7 +230,7 @@ func TestUnifiedResourceWatcher(t *testing.T) {
 		cmpopts.IgnoreFields(types.Metadata{}, "Revision"),
 		cmpopts.IgnoreFields(header.Metadata{}, "Revision"),
 		cmpopts.IgnoreFields(types.AppServerSpecV3{}, "ComponentFeatures"),
-
+		cmpopts.IgnoreFields(types.DatabaseServerSpecV3{}, "ComponentFeatures"),
 		// Ignore order.
 		cmpopts.SortSlices(func(a, b types.ResourceWithLabels) bool { return a.GetName() < b.GetName() }),
 	))
