@@ -20,7 +20,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 
 import { Box, Card, Flex, Indicator } from 'design';
-import { Danger, Info as InfoAlert } from 'design/Alert';
+import { Danger } from 'design/Alert';
 import { copyToClipboard } from 'design/utils/copyToClipboard';
 import Validation from 'shared/components/Validation';
 
