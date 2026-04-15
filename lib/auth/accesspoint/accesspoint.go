@@ -119,6 +119,7 @@ type Config struct {
 	AppAuthConfig           services.AppAuthConfigReader
 	WorkloadClusterService  services.WorkloadClusterService
 	Summarizer              services.Summarizer
+	SubCAService            services.SubCAServiceGetter
 }
 
 func (c *Config) CheckAndSetDefaults() error {
@@ -209,6 +210,7 @@ func NewCache(cfg Config) (*cache.Cache, error) {
 		AppAuthConfig:           cfg.AppAuthConfig,
 		WorkloadClusterService:  cfg.WorkloadClusterService,
 		Summarizer:              cfg.Summarizer,
+		SubCAService:            cfg.SubCAService,
 	}
 
 	return cache.New(cfg.Setup(cacheCfg))
