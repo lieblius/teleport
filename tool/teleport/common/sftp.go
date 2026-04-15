@@ -238,16 +238,28 @@ func (s *sftpHandler) openFile(req *sftp.Request) (sftp.WriterAtReaderAt, error)
 		return nil, err
 	}
 
-	dir, filename := path.Split(req.Filepath)
-	root, err := os.OpenRoot(dir)
-	if err != nil {
-		return nil, err
+	var f *os.File
+	if s.allowed != nil {
+		// For moderated sessions, open in a root to minimize unexpected symlink
+		// traversals.
+		dir, filename := path.Split(req.Filepath)
+		root, err := os.OpenRoot(dir)
+		if err != nil {
+			return nil, err
+		}
+		defer root.Close()
+		f, err = root.OpenFile(filename, sftputils.ParseFlags(req), defaults.FilePermissions)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		var err error
+		f, err = os.OpenFile(req.Filepath, sftputils.ParseFlags(req), defaults.FilePermissions)
+		if err != nil {
+			return nil, err
+		}
 	}
-	defer root.Close()
-	f, err := root.OpenFile(filename, sftputils.ParseFlags(req), defaults.FilePermissions)
-	if err != nil {
-		return nil, err
-	}
+
 	trackFile := &sftputils.TrackedFile{File: f}
 	s.mtx.Lock()
 	s.files = append(s.files, trackFile)
