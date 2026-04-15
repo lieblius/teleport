@@ -118,6 +118,7 @@ func newSFTPHandler(logger *slog.Logger, req *srv.FileTransferRequest, events ch
 // it is okay if the file at the end does not exist, as it may be created soon.
 // The returned path is not localized.
 func evalSymlinks(p string) (string, error) {
+	p = filepath.ToSlash(p)
 	dir, file := path.Split(p)
 	resolvedDir, err := filepath.EvalSymlinks(dir)
 	if err != nil {
