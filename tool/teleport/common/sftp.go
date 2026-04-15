@@ -116,34 +116,38 @@ func newSFTPHandler(logger *slog.Logger, req *srv.FileTransferRequest, events ch
 
 // evalSymlinks evaluates symlinks in a path. Unlike [filepath.EvalSymlinks],
 // it is okay if the file at the end does not exist, as it may be created soon.
+// The returned path is not localized.
 func evalSymlinks(p string) (string, error) {
-	dir, file := filepath.Split(p)
+	dir, file := path.Split(p)
 	resolvedDir, err := filepath.EvalSymlinks(dir)
 	if err != nil {
 		return "", trace.ConvertSystemError(err)
 	}
+	// Work with path package compatible paths as much as possible.
+	resolvedDir = filepath.ToSlash(resolvedDir)
 	linkInfo, err := os.Lstat(p)
 	if err != nil {
 		osErr := trace.ConvertSystemError(err)
 		if trace.IsNotFound(err) {
 			// File does not exist and is not a symlink, but the path is valid.
-			return filepath.Join(resolvedDir, file), nil
+			return path.Join(resolvedDir, file), nil
 		}
 		return "", osErr
 	}
 	if linkInfo.Mode()&os.ModeSymlink == 0 {
 		// File is not a symlink, return the resolved parent + file.
-		return filepath.Join(resolvedDir, file), nil
+		return path.Join(resolvedDir, file), nil
 	}
 	// File is a symlink, resolve its target.
 	linkTarget, err := os.Readlink(p)
 	if err != nil {
 		return "", trace.ConvertSystemError(err)
 	}
-	if filepath.IsAbs(linkTarget) {
+	linkTarget = filepath.ToSlash(linkTarget)
+	if path.IsAbs(linkTarget) {
 		return linkTarget, nil
 	}
-	return filepath.Join(resolvedDir, linkTarget), nil
+	return path.Join(resolvedDir, linkTarget), nil
 }
 
 // ensureReqIsAllowed returns an error if the SFTP request isn't
@@ -162,7 +166,7 @@ func (s *sftpHandler) ensureReqIsAllowed(req *sftp.Request) error {
 	if err != nil {
 		return trace.Wrap(err)
 	}
-	if s.allowed.path != filepath.ToSlash(resolvedPath) {
+	if s.allowed.path != resolvedPath {
 		return trace.Errorf("following symlinks is not allowed for moderated file transfers, request the resolved path instead")
 	}
 
