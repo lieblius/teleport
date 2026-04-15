@@ -1,5 +1,5 @@
 /*
-Copyright 2015-2022 Gravitational, Inc.
+Copyright 2015-2026 Gravitational, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -8120,7 +8120,7 @@ func CopyDatabaseV3ToTerraform(ctx context.Context, obj *github_com_gravitationa
 								if !ok {
 									diags.Append(attrWriteConversionFailureDiag{"DatabaseV3.Metadata.Expires", "TimeValue"})
 								}
-								v.Null = false
+								v.Null = obj.Expires == nil
 							}
 							if obj.Expires == nil {
 								v.Null = true
@@ -11624,7 +11624,7 @@ func CopyServerV2ToTerraform(ctx context.Context, obj *github_com_gravitational_
 								if !ok {
 									diags.Append(attrWriteConversionFailureDiag{"ServerV2.Metadata.Expires", "TimeValue"})
 								}
-								v.Null = false
+								v.Null = obj.Expires == nil
 							}
 							if obj.Expires == nil {
 								v.Null = true
@@ -13919,7 +13919,7 @@ func CopyAppV3ToTerraform(ctx context.Context, obj *github_com_gravitational_tel
 								if !ok {
 									diags.Append(attrWriteConversionFailureDiag{"AppV3.Metadata.Expires", "TimeValue"})
 								}
-								v.Null = false
+								v.Null = obj.Expires == nil
 							}
 							if obj.Expires == nil {
 								v.Null = true
@@ -18685,7 +18685,7 @@ func CopyProvisionTokenV2ToTerraform(ctx context.Context, obj *github_com_gravit
 								if !ok {
 									diags.Append(attrWriteConversionFailureDiag{"ProvisionTokenV2.Metadata.Expires", "TimeValue"})
 								}
-								v.Null = false
+								v.Null = obj.Expires == nil
 							}
 							if obj.Expires == nil {
 								v.Null = true
@@ -22078,7 +22078,7 @@ func CopyProvisionTokenV2ToTerraform(ctx context.Context, obj *github_com_gravit
 																if !ok {
 																	diags.Append(attrWriteConversionFailureDiag{"ProvisionTokenV2.Spec.BoundKeypair.Onboarding.MustRegisterBefore", "TimeValue"})
 																}
-																v.Null = false
+																v.Null = obj.MustRegisterBefore == nil
 															}
 															if obj.MustRegisterBefore == nil {
 																v.Null = true
@@ -22187,7 +22187,7 @@ func CopyProvisionTokenV2ToTerraform(ctx context.Context, obj *github_com_gravit
 												if !ok {
 													diags.Append(attrWriteConversionFailureDiag{"ProvisionTokenV2.Spec.BoundKeypair.RotateAfter", "TimeValue"})
 												}
-												v.Null = false
+												v.Null = obj.RotateAfter == nil
 											}
 											if obj.RotateAfter == nil {
 												v.Null = true
@@ -23008,7 +23008,7 @@ func CopyProvisionTokenV2ToTerraform(ctx context.Context, obj *github_com_gravit
 												if !ok {
 													diags.Append(attrWriteConversionFailureDiag{"ProvisionTokenV2.Status.BoundKeypair.LastRecoveredAt", "TimeValue"})
 												}
-												v.Null = false
+												v.Null = obj.LastRecoveredAt == nil
 											}
 											if obj.LastRecoveredAt == nil {
 												v.Null = true
@@ -23035,7 +23035,7 @@ func CopyProvisionTokenV2ToTerraform(ctx context.Context, obj *github_com_gravit
 												if !ok {
 													diags.Append(attrWriteConversionFailureDiag{"ProvisionTokenV2.Status.BoundKeypair.LastRotatedAt", "TimeValue"})
 												}
-												v.Null = false
+												v.Null = obj.LastRotatedAt == nil
 											}
 											if obj.LastRotatedAt == nil {
 												v.Null = true
@@ -23752,7 +23752,7 @@ func CopyClusterNetworkingConfigV2ToTerraform(ctx context.Context, obj *github_c
 								if !ok {
 									diags.Append(attrWriteConversionFailureDiag{"ClusterNetworkingConfigV2.Metadata.Expires", "TimeValue"})
 								}
-								v.Null = false
+								v.Null = obj.Expires == nil
 							}
 							if obj.Expires == nil {
 								v.Null = true
@@ -24913,7 +24913,7 @@ func CopySessionRecordingConfigV2ToTerraform(ctx context.Context, obj *github_co
 								if !ok {
 									diags.Append(attrWriteConversionFailureDiag{"SessionRecordingConfigV2.Metadata.Expires", "TimeValue"})
 								}
-								v.Null = false
+								v.Null = obj.Expires == nil
 							}
 							if obj.Expires == nil {
 								v.Null = true
@@ -26541,7 +26541,7 @@ func CopyAuthPreferenceV2ToTerraform(ctx context.Context, obj *github_com_gravit
 								if !ok {
 									diags.Append(attrWriteConversionFailureDiag{"AuthPreferenceV2.Metadata.Expires", "TimeValue"})
 								}
-								v.Null = false
+								v.Null = obj.Expires == nil
 							}
 							if obj.Expires == nil {
 								v.Null = true
@@ -33228,7 +33228,7 @@ func CopyRoleV6ToTerraform(ctx context.Context, obj *github_com_gravitational_te
 								if !ok {
 									diags.Append(attrWriteConversionFailureDiag{"RoleV6.Metadata.Expires", "TimeValue"})
 								}
-								v.Null = false
+								v.Null = obj.Expires == nil
 							}
 							if obj.Expires == nil {
 								v.Null = true
@@ -42724,7 +42724,7 @@ func CopyUserV2ToTerraform(ctx context.Context, obj *github_com_gravitational_te
 								if !ok {
 									diags.Append(attrWriteConversionFailureDiag{"UserV2.Metadata.Expires", "TimeValue"})
 								}
-								v.Null = false
+								v.Null = obj.Expires == nil
 							}
 							if obj.Expires == nil {
 								v.Null = true
@@ -44195,7 +44195,7 @@ func CopyKubernetesClusterV3ToTerraform(ctx context.Context, obj *github_com_gra
 								if !ok {
 									diags.Append(attrWriteConversionFailureDiag{"KubernetesClusterV3.Metadata.Expires", "TimeValue"})
 								}
-								v.Null = false
+								v.Null = obj.Expires == nil
 							}
 							if obj.Expires == nil {
 								v.Null = true
@@ -45893,7 +45893,7 @@ func CopyOIDCConnectorV3ToTerraform(ctx context.Context, obj *github_com_gravita
 								if !ok {
 									diags.Append(attrWriteConversionFailureDiag{"OIDCConnectorV3.Metadata.Expires", "TimeValue"})
 								}
-								v.Null = false
+								v.Null = obj.Expires == nil
 							}
 							if obj.Expires == nil {
 								v.Null = true
@@ -48107,7 +48107,7 @@ func CopySAMLConnectorV2ToTerraform(ctx context.Context, obj *github_com_gravita
 								if !ok {
 									diags.Append(attrWriteConversionFailureDiag{"SAMLConnectorV2.Metadata.Expires", "TimeValue"})
 								}
-								v.Null = false
+								v.Null = obj.Expires == nil
 							}
 							if obj.Expires == nil {
 								v.Null = true
@@ -50058,7 +50058,7 @@ func CopyGithubConnectorV3ToTerraform(ctx context.Context, obj *github_com_gravi
 								if !ok {
 									diags.Append(attrWriteConversionFailureDiag{"GithubConnectorV3.Metadata.Expires", "TimeValue"})
 								}
-								v.Null = false
+								v.Null = obj.Expires == nil
 							}
 							if obj.Expires == nil {
 								v.Null = true
@@ -51466,7 +51466,7 @@ func CopyTrustedClusterV2ToTerraform(ctx context.Context, obj *github_com_gravit
 								if !ok {
 									diags.Append(attrWriteConversionFailureDiag{"TrustedClusterV2.Metadata.Expires", "TimeValue"})
 								}
-								v.Null = false
+								v.Null = obj.Expires == nil
 							}
 							if obj.Expires == nil {
 								v.Null = true
@@ -52500,7 +52500,7 @@ func CopyLockV2ToTerraform(ctx context.Context, obj *github_com_gravitational_te
 								if !ok {
 									diags.Append(attrWriteConversionFailureDiag{"LockV2.Metadata.Expires", "TimeValue"})
 								}
-								v.Null = false
+								v.Null = obj.Expires == nil
 							}
 							if obj.Expires == nil {
 								v.Null = true
@@ -52851,7 +52851,7 @@ func CopyLockV2ToTerraform(ctx context.Context, obj *github_com_gravitational_te
 								if !ok {
 									diags.Append(attrWriteConversionFailureDiag{"LockV2.Spec.Expires", "TimeValue"})
 								}
-								v.Null = false
+								v.Null = obj.Expires == nil
 							}
 							if obj.Expires == nil {
 								v.Null = true
@@ -53452,7 +53452,7 @@ func CopyDynamicWindowsDesktopV1ToTerraform(ctx context.Context, obj *github_com
 								if !ok {
 									diags.Append(attrWriteConversionFailureDiag{"DynamicWindowsDesktopV1.Metadata.Expires", "TimeValue"})
 								}
-								v.Null = false
+								v.Null = obj.Expires == nil
 							}
 							if obj.Expires == nil {
 								v.Null = true
@@ -54117,7 +54117,7 @@ func CopyInstallerV1ToTerraform(ctx context.Context, obj *github_com_gravitation
 								if !ok {
 									diags.Append(attrWriteConversionFailureDiag{"InstallerV1.Metadata.Expires", "TimeValue"})
 								}
-								v.Null = false
+								v.Null = obj.Expires == nil
 							}
 							if obj.Expires == nil {
 								v.Null = true
@@ -54837,7 +54837,7 @@ func CopySAMLIdPServiceProviderV1ToTerraform(ctx context.Context, obj *github_co
 								if !ok {
 									diags.Append(attrWriteConversionFailureDiag{"SAMLIdPServiceProviderV1.Metadata.Expires", "TimeValue"})
 								}
-								v.Null = false
+								v.Null = obj.Expires == nil
 							}
 							if obj.Expires == nil {
 								v.Null = true
@@ -55670,7 +55670,7 @@ func CopyClusterMaintenanceConfigV1ToTerraform(ctx context.Context, obj *github_
 								if !ok {
 									diags.Append(attrWriteConversionFailureDiag{"ClusterMaintenanceConfigV1.Metadata.Expires", "TimeValue"})
 								}
-								v.Null = false
+								v.Null = obj.Expires == nil
 							}
 							if obj.Expires == nil {
 								v.Null = true
@@ -56515,7 +56515,7 @@ func CopyOktaImportRuleV1ToTerraform(ctx context.Context, obj *github_com_gravit
 								if !ok {
 									diags.Append(attrWriteConversionFailureDiag{"OktaImportRuleV1.Metadata.Expires", "TimeValue"})
 								}
-								v.Null = false
+								v.Null = obj.Expires == nil
 							}
 							if obj.Expires == nil {
 								v.Null = true
@@ -57691,7 +57691,7 @@ func CopyIntegrationV1ToTerraform(ctx context.Context, obj *github_com_gravitati
 								if !ok {
 									diags.Append(attrWriteConversionFailureDiag{"IntegrationV1.Metadata.Expires", "TimeValue"})
 								}
-								v.Null = false
+								v.Null = obj.Expires == nil
 							}
 							if obj.Expires == nil {
 								v.Null = true
