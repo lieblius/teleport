@@ -701,7 +701,7 @@ func TestAzureWatcher_PowerStateFiltering(t *testing.T) {
 
 		// Both fetchers should produce results, but only running VMs.
 		var allVMNames []string
-		for i := 0; i < 2; i++ {
+		for i := range 2
 			select {
 			case results := <-watcher.InstancesC:
 				for _, vm := range results.Instances {
