@@ -45,13 +45,8 @@ export function ConnectDialog(props: {
   serviceName: string;
   onClose(): void;
   onConnect(data: DbConnectData): void;
-  desiredDbUser?: string;
-  desiredDbName?: string;
-  desiredDbRole?: string;
 }) {
   // Fetch database information to pre-fill the connection parameters.
-  // If desired principals all resolve to valid options, auto-connect
-  // directly from the fetch callback (bypassing the form entirely).
   const ctx = useTeleport();
   const [attempt, getDatabase] = useAsync(
     useCallback(async () => {
@@ -70,14 +65,7 @@ export function ConnectDialog(props: {
         throw new Error('Unable to retrieve database information.');
       }
 
-      const db = response.agents[0];
-      const autoConnectData = tryAutoConnect(db, props);
-      if (autoConnectData) {
-        props.onConnect(autoConnectData);
-        return null;
-      }
-
-      return db;
+      return response.agents[0];
     }, [props.clusterId, ctx.resourceService, props.serviceName])
   );
 
@@ -102,14 +90,11 @@ export function ConnectDialog(props: {
           <Indicator />
         </Box>
       )}
-      {attempt.status === 'success' && attempt.data && (
+      {attempt.status === 'success' && (
         <ConnectForm
           db={attempt.data}
           onConnect={props.onConnect}
           onClose={props.onClose}
-          desiredDbUser={props.desiredDbUser}
-          desiredDbName={props.desiredDbName}
-          desiredDbRole={props.desiredDbRole}
         />
       )}
     </Dialog>
@@ -120,9 +105,6 @@ function ConnectForm(props: {
   db: Database;
   onConnect(data: DbConnectData): void;
   onClose(): void;
-  desiredDbUser?: string;
-  desiredDbName?: string;
-  desiredDbRole?: string;
 }) {
   const { options: dbNamesOpts, hasWildcard: dbNameHasWildcard } =
     prepareOptions(props.db.names);
@@ -131,22 +113,10 @@ function ConnectForm(props: {
   const { options: dbRolesOpts, hasWildcard: dbRoleHasWildcard } =
     prepareOptions(props.db.roles);
 
-  const [selectedName, setSelectedName] = useState<Option>(() =>
-    findOptionOrCreate(dbNamesOpts, props.desiredDbName, dbNameHasWildcard) ??
-    dbNamesOpts?.[0]
-  );
-  const [selectedUser, setSelectedUser] = useState<Option>(() =>
-    findOptionOrCreate(dbUserOpts, props.desiredDbUser, dbUserHasWildcard) ??
-    dbUserOpts?.[0]
-  );
+  const [selectedName, setSelectedName] = useState<Option>(dbNamesOpts?.[0]);
+  const [selectedUser, setSelectedUser] = useState<Option>(dbUserOpts?.[0]);
   const [selectedRoles, setSelectedRoles] =
-    useState<readonly Option[]>(() => {
-      if (props.desiredDbRole) {
-        const match = findOptionOrCreate(dbRolesOpts, props.desiredDbRole, dbRoleHasWildcard);
-        if (match) return [match];
-      }
-      return dbRolesOpts;
-    });
+    useState<readonly Option[]>(dbRolesOpts);
 
   const dbConnect = () => {
     props.onConnect({
@@ -268,52 +238,6 @@ function ConnectionField({
   ) : (
     <FieldSelect {...commonOptions} />
   );
-}
-
-/**
- * Checks if desired principals all resolve to valid options for this DB.
- * If so, returns the DbConnectData to use; otherwise returns null.
- */
-function tryAutoConnect(
-  db: Database,
-  props: { desiredDbUser?: string; desiredDbName?: string; desiredDbRole?: string }
-): DbConnectData | null {
-  if (!props.desiredDbUser && !props.desiredDbRole) return null;
-
-  const { options: nameOpts, hasWildcard: nameWild } = prepareOptions(db.names);
-  const { options: userOpts, hasWildcard: userWild } = prepareOptions(db.users);
-  const { options: roleOpts, hasWildcard: roleWild } = prepareOptions(db.roles);
-
-  const dbNameReq = getDbNameRequirement(db.protocol);
-  const resolvedName = findOptionOrCreate(nameOpts, props.desiredDbName, nameWild);
-  const resolvedUser = findOptionOrCreate(userOpts, props.desiredDbUser, userWild);
-  const resolvedRole = findOptionOrCreate(roleOpts, props.desiredDbRole, roleWild);
-
-  const hasName = dbNameReq === 'unsupported' || !!resolvedName;
-  const hasUserOrRole = !!resolvedUser || !!resolvedRole;
-
-  if (!hasName || !hasUserOrRole) return null;
-
-  return {
-    serviceName: db.name,
-    protocol: db.protocol,
-    dbName: resolvedName?.value,
-    dbUser: resolvedUser?.value ?? userOpts?.[0]?.value,
-    dbRoles: resolvedRole ? [resolvedRole.value] : roleOpts?.map(o => o.value),
-  };
-}
-
-function findOptionOrCreate(
-  options: Option[],
-  desired: string | undefined,
-  hasWildcard: boolean
-): Option | undefined {
-  if (!desired) return undefined;
-  const match = options?.find(o => o.value === desired);
-  if (match) return match;
-  // If there's a wildcard, the user can use any value, so create an option.
-  if (hasWildcard) return { value: desired, label: desired };
-  return undefined;
 }
 
 function prepareOptions(rawOpts: string[]): {

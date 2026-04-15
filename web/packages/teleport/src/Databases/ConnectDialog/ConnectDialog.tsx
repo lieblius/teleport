@@ -51,7 +51,6 @@ export default function ConnectDialog({
   accessRequestId,
   dbProtocol,
   supportsInteractive,
-  desiredPrincipals,
 }: Props) {
   // For dynamodb and clickhouse-http protocols, the command is `tsh proxy db --tunnel` instead of `tsh db connect`.
   let connectCommand =
@@ -64,28 +63,20 @@ export default function ConnectDialog({
   let dbNameFlag: string;
   switch (dbNameReq) {
     case 'required':
-      dbNameFlag = ` --db-name=${desiredPrincipals?.dbName || '<name>'}`;
+      dbNameFlag = ' --db-name=<name>';
       break;
     case 'unsupported':
       dbNameFlag = '';
       break;
     case 'optional':
-      dbNameFlag = ` [--db-name=${desiredPrincipals?.dbName || '<name>'}]`;
+      dbNameFlag = ' [--db-name=<name>]';
       break;
     default:
       assertUnreachable(dbNameReq);
   }
 
   const onConnect = () => {
-    let url = cfg.getDbConnectRoute({ clusterId, serviceName: dbName });
-    if (desiredPrincipals) {
-      const qps = new URLSearchParams();
-      if (desiredPrincipals.dbUser) qps.set('dbUser', desiredPrincipals.dbUser);
-      if (desiredPrincipals.dbName) qps.set('dbName', desiredPrincipals.dbName);
-      if (desiredPrincipals.dbRole) qps.set('dbRole', desiredPrincipals.dbRole);
-      const qs = qps.toString();
-      if (qs) url += `?${qs}`;
-    }
+    const url = cfg.getDbConnectRoute({ clusterId, serviceName: dbName });
     openNewTab(url);
     onClose();
   };
@@ -155,7 +146,7 @@ export default function ConnectDialog({
           {' - Connect to the database'}
           <TextSelectCopy
             mt="2"
-            text={`tsh ${connectCommand} ${dbName} --db-user=${desiredPrincipals?.dbUser || desiredPrincipals?.dbRole || '<user>'}${dbNameFlag}`}
+            text={`tsh ${connectCommand} ${dbName} --db-user=<user>${dbNameFlag}`}
           />
         </Box>
         {accessRequestId && (
@@ -196,7 +187,4 @@ export type Props = {
   authType: AuthType;
   accessRequestId?: string;
   supportsInteractive?: boolean;
-  desiredPrincipals?:
-    | { dbName: string; dbUser: string; dbRole?: never }
-    | { dbName: string; dbUser?: never; dbRole: string };
 };

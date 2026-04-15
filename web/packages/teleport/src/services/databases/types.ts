@@ -52,11 +52,11 @@ export interface Database {
   users?: string[];
   roles?: string[];
   /** Per-user metadata including whether an access request is required. */
-  databaseUserDetails?: DatabaseUserDetail[];
+  databaseUserDetails?: DatabasePrincipalDetail[];
   /** Per-name metadata including whether an access request is required. */
-  databaseNameDetails?: DatabaseNameDetail[];
+  databaseNameDetails?: DatabasePrincipalDetail[];
   /** Per-role metadata including whether an access request is required. */
-  databaseRoleDetails?: DatabaseRoleDetail[];
+  databaseRoleDetails?: DatabasePrincipalDetail[];
   hostname: string;
   aws?: Aws;
   requiresRequest?: boolean;
@@ -135,17 +135,7 @@ export type DatabaseServer = {
   targetHealth?: ResourceTargetHealth;
 };
 
-export type DatabaseUserDetail = {
-  user: string;
-  requiresRequest?: boolean;
-};
-
-export type DatabaseNameDetail = {
-  name: string;
-  requiresRequest?: boolean;
-};
-
-export type DatabaseRoleDetail = {
-  role: string;
+export type DatabasePrincipalDetail = {
+  value: string;
   requiresRequest?: boolean;
 };

@@ -66,7 +66,7 @@ export function makeDatabase(json: any): Database {
       error: targetHealth.transition_error,
       message: targetHealth.message,
     },
-    supportedFeatureIds: json.supportedFeatureIds,
+    supportedFeatureIds: json.supportedFeatureIds || [],
   };
 }
 
