@@ -706,22 +706,23 @@ func deriveTeleportEqual_27(this, that *SAMLConnectorSpecV2) bool {
 			this.PreferredRequestBinding == that.PreferredRequestBinding &&
 			deriveTeleportEqual_2(this.UserMatchers, that.UserMatchers) &&
 			this.IncludeSubject == that.IncludeSubject &&
-			deriveTeleportEqual_64(this.EntraIdGroupsProvider, that.EntraIdGroupsProvider)
+			deriveTeleportEqual_64(this.EntraIdGroupsProvider, that.EntraIdGroupsProvider) &&
+			deriveTeleportEqual_65(this.Credentials, that.Credentials)
 }
 
 // deriveTeleportEqual_28 returns whether this and that are equal.
 func deriveTeleportEqual_28(this, that *UserSpecV2) bool {
 	return (this == nil && that == nil) ||
 		this != nil && that != nil &&
-			deriveTeleportEqual_65(this.OIDCIdentities, that.OIDCIdentities) &&
-			deriveTeleportEqual_65(this.SAMLIdentities, that.SAMLIdentities) &&
-			deriveTeleportEqual_65(this.GithubIdentities, that.GithubIdentities) &&
+			deriveTeleportEqual_66(this.OIDCIdentities, that.OIDCIdentities) &&
+			deriveTeleportEqual_66(this.SAMLIdentities, that.SAMLIdentities) &&
+			deriveTeleportEqual_66(this.GithubIdentities, that.GithubIdentities) &&
 			deriveTeleportEqual_2(this.Roles, that.Roles) &&
 			deriveTeleportEqual_30(this.Traits, that.Traits) &&
-			deriveTeleportEqual_66(&this.Status, &that.Status) &&
+			deriveTeleportEqual_67(&this.Status, &that.Status) &&
 			this.Expires.Equal(that.Expires) &&
-			deriveTeleportEqual_67(&this.CreatedBy, &that.CreatedBy) &&
-			deriveTeleportEqual_68(this.LocalAuth, that.LocalAuth) &&
+			deriveTeleportEqual_68(&this.CreatedBy, &that.CreatedBy) &&
+			deriveTeleportEqual_69(this.LocalAuth, that.LocalAuth) &&
 			deriveTeleportEqual_2(this.TrustedDeviceIDs, that.TrustedDeviceIDs)
 }
 
@@ -781,7 +782,7 @@ func deriveTeleportEqual_32(this, that map[string]ThresholdIndexSets) bool {
 		if !ok {
 			return false
 		}
-		if !(deriveTeleportEqual_69(&v, &thatv)) {
+		if !(deriveTeleportEqual_70(&v, &thatv)) {
 			return false
 		}
 	}
@@ -797,7 +798,7 @@ func deriveTeleportEqual_33(this, that []AccessReview) bool {
 		return false
 	}
 	for i := 0; i < len(this); i++ {
-		if !(deriveTeleportEqual_70(&this[i], &that[i])) {
+		if !(deriveTeleportEqual_71(&this[i], &that[i])) {
 			return false
 		}
 	}
@@ -840,7 +841,7 @@ func deriveTeleportEqual_36(this, that *AccessRequestDryRunEnrichment) bool {
 func deriveTeleportEqual_37(this, that *LongTermResourceGrouping) bool {
 	return (this == nil && that == nil) ||
 		this != nil && that != nil &&
-			deriveTeleportEqual_71(this.AccessListToResources, that.AccessListToResources) &&
+			deriveTeleportEqual_72(this.AccessListToResources, that.AccessListToResources) &&
 			this.RecommendedAccessList == that.RecommendedAccessList &&
 			this.ValidationMessage == that.ValidationMessage &&
 			this.CanProceed == that.CanProceed
@@ -859,7 +860,7 @@ func deriveTeleportEqual_38(this, that map[string]CommandLabelV2) bool {
 		if !ok {
 			return false
 		}
-		if !(deriveTeleportEqual_72(&v, &thatv)) {
+		if !(deriveTeleportEqual_73(&v, &thatv)) {
 			return false
 		}
 	}
@@ -871,7 +872,7 @@ func deriveTeleportEqual_39(this, that *Rewrite) bool {
 	return (this == nil && that == nil) ||
 		this != nil && that != nil &&
 			deriveTeleportEqual_2(this.Redirect, that.Redirect) &&
-			deriveTeleportEqual_73(this.Headers, that.Headers) &&
+			deriveTeleportEqual_74(this.Headers, that.Headers) &&
 			this.JWTClaims == that.JWTClaims
 }
 
@@ -880,7 +881,7 @@ func deriveTeleportEqual_40(this, that *AppAWS) bool {
 	return (this == nil && that == nil) ||
 		this != nil && that != nil &&
 			this.ExternalID == that.ExternalID &&
-			deriveTeleportEqual_74(this.RolesAnywhereProfile, that.RolesAnywhereProfile)
+			deriveTeleportEqual_75(this.RolesAnywhereProfile, that.RolesAnywhereProfile)
 }
 
 // deriveTeleportEqual_41 returns whether this and that are equal.
@@ -900,7 +901,7 @@ func deriveTeleportEqual_42(this, that *AppIdentityCenter) bool {
 	return (this == nil && that == nil) ||
 		this != nil && that != nil &&
 			this.AccountID == that.AccountID &&
-			deriveTeleportEqual_75(this.PermissionSets, that.PermissionSets)
+			deriveTeleportEqual_76(this.PermissionSets, that.PermissionSets)
 }
 
 // deriveTeleportEqual_43 returns whether this and that are equal.
@@ -912,7 +913,7 @@ func deriveTeleportEqual_43(this, that []*PortRange) bool {
 		return false
 	}
 	for i := 0; i < len(this); i++ {
-		if !(deriveTeleportEqual_76(this[i], that[i])) {
+		if !(deriveTeleportEqual_77(this[i], that[i])) {
 			return false
 		}
 	}
@@ -939,14 +940,14 @@ func deriveTeleportEqual_45(this, that *Rotation) bool {
 			this.Started.Equal(that.Started) &&
 			this.GracePeriod == that.GracePeriod &&
 			this.LastRotated.Equal(that.LastRotated) &&
-			deriveTeleportEqual_77(&this.Schedule, &that.Schedule)
+			deriveTeleportEqual_78(&this.Schedule, &that.Schedule)
 }
 
 // deriveTeleportEqual_46 returns whether this and that are equal.
 func deriveTeleportEqual_46(this, that *componentfeaturesv1.ComponentFeatures) bool {
 	return (this == nil && that == nil) ||
 		this != nil && that != nil &&
-			deriveTeleportEqual_78(this.Features, that.Features)
+			deriveTeleportEqual_79(this.Features, that.Features)
 }
 
 // deriveTeleportEqual_47 returns whether this and that are equal.
@@ -958,7 +959,7 @@ func deriveTeleportEqual_47(this, that []RoleMapping) bool {
 		return false
 	}
 	for i := 0; i < len(this); i++ {
-		if !(deriveTeleportEqual_79(&this[i], &that[i])) {
+		if !(deriveTeleportEqual_80(&this[i], &that[i])) {
 			return false
 		}
 	}
@@ -969,9 +970,9 @@ func deriveTeleportEqual_47(this, that []RoleMapping) bool {
 func deriveTeleportEqual_48(this, that *CAKeySet) bool {
 	return (this == nil && that == nil) ||
 		this != nil && that != nil &&
-			deriveTeleportEqual_80(this.SSH, that.SSH) &&
-			deriveTeleportEqual_81(this.TLS, that.TLS) &&
-			deriveTeleportEqual_82(this.JWT, that.JWT)
+			deriveTeleportEqual_81(this.SSH, that.SSH) &&
+			deriveTeleportEqual_82(this.TLS, that.TLS) &&
+			deriveTeleportEqual_83(this.JWT, that.JWT)
 }
 
 // deriveTeleportEqual_49 returns whether this and that are equal.
@@ -1043,7 +1044,7 @@ func deriveTeleportEqual_56(this, that *KubernetesClusterAWSStatus) bool {
 		this != nil && that != nil &&
 			this.SetupAccessForArn == that.SetupAccessForArn &&
 			this.Integration == that.Integration &&
-			deriveTeleportEqual_83(this.DiscoveryAssumedRole, that.DiscoveryAssumedRole)
+			deriveTeleportEqual_84(this.DiscoveryAssumedRole, that.DiscoveryAssumedRole)
 }
 
 // deriveTeleportEqual_57 returns whether this and that are equal.
@@ -1055,7 +1056,7 @@ func deriveTeleportEqual_57(this, that []*OktaAssignmentTargetV1) bool {
 		return false
 	}
 	for i := 0; i < len(this); i++ {
-		if !(deriveTeleportEqual_84(this[i], that[i])) {
+		if !(deriveTeleportEqual_85(this[i], that[i])) {
 			return false
 		}
 	}
@@ -1068,7 +1069,7 @@ func deriveTeleportEqual_58(this, that *RoleOptions) bool {
 		this != nil && that != nil &&
 			this.ForwardAgent == that.ForwardAgent &&
 			this.MaxSessionTTL == that.MaxSessionTTL &&
-			deriveTeleportEqual_85(this.PortForwarding, that.PortForwarding) &&
+			deriveTeleportEqual_86(this.PortForwarding, that.PortForwarding) &&
 			this.CertificateFormat == that.CertificateFormat &&
 			this.ClientIdleTimeout == that.ClientIdleTimeout &&
 			this.DisconnectExpiredCert == that.DisconnectExpiredCert &&
@@ -1079,24 +1080,24 @@ func deriveTeleportEqual_58(this, that *RoleOptions) bool {
 			this.RequestAccess == that.RequestAccess &&
 			this.RequestPrompt == that.RequestPrompt &&
 			this.Lock == that.Lock &&
-			deriveTeleportEqual_86(this.RecordSession, that.RecordSession) &&
-			deriveTeleportEqual_85(this.DesktopClipboard, that.DesktopClipboard) &&
-			deriveTeleportEqual_87(this.CertExtensions, that.CertExtensions) &&
+			deriveTeleportEqual_87(this.RecordSession, that.RecordSession) &&
+			deriveTeleportEqual_86(this.DesktopClipboard, that.DesktopClipboard) &&
+			deriveTeleportEqual_88(this.CertExtensions, that.CertExtensions) &&
 			this.MaxKubernetesConnections == that.MaxKubernetesConnections &&
-			deriveTeleportEqual_85(this.DesktopDirectorySharing, that.DesktopDirectorySharing) &&
-			deriveTeleportEqual_85(this.CreateHostUser, that.CreateHostUser) &&
+			deriveTeleportEqual_86(this.DesktopDirectorySharing, that.DesktopDirectorySharing) &&
+			deriveTeleportEqual_86(this.CreateHostUser, that.CreateHostUser) &&
 			this.PinSourceIP == that.PinSourceIP &&
-			deriveTeleportEqual_85(this.SSHFileCopy, that.SSHFileCopy) &&
+			deriveTeleportEqual_86(this.SSHFileCopy, that.SSHFileCopy) &&
 			this.RequireMFAType == that.RequireMFAType &&
 			this.DeviceTrustMode == that.DeviceTrustMode &&
-			deriveTeleportEqual_88(this.IDP, that.IDP) &&
-			deriveTeleportEqual_85(this.CreateDesktopUser, that.CreateDesktopUser) &&
-			deriveTeleportEqual_85(this.CreateDatabaseUser, that.CreateDatabaseUser) &&
+			deriveTeleportEqual_89(this.IDP, that.IDP) &&
+			deriveTeleportEqual_86(this.CreateDesktopUser, that.CreateDesktopUser) &&
+			deriveTeleportEqual_86(this.CreateDatabaseUser, that.CreateDatabaseUser) &&
 			this.CreateHostUserMode == that.CreateHostUserMode &&
 			this.CreateDatabaseUserMode == that.CreateDatabaseUserMode &&
 			this.MFAVerificationInterval == that.MFAVerificationInterval &&
 			this.CreateHostUserDefaultShell == that.CreateHostUserDefaultShell &&
-			deriveTeleportEqual_89(this.SSHPortForwarding, that.SSHPortForwarding)
+			deriveTeleportEqual_90(this.SSHPortForwarding, that.SSHPortForwarding)
 }
 
 // deriveTeleportEqual_59 returns whether this and that are equal.
@@ -1105,31 +1106,31 @@ func deriveTeleportEqual_59(this, that *RoleConditions) bool {
 		this != nil && that != nil &&
 			deriveTeleportEqual_2(this.Logins, that.Logins) &&
 			deriveTeleportEqual_2(this.Namespaces, that.Namespaces) &&
-			deriveTeleportEqual_90(this.NodeLabels, that.NodeLabels) &&
-			deriveTeleportEqual_91(this.Rules, that.Rules) &&
+			deriveTeleportEqual_91(this.NodeLabels, that.NodeLabels) &&
+			deriveTeleportEqual_92(this.Rules, that.Rules) &&
 			deriveTeleportEqual_2(this.KubeGroups, that.KubeGroups) &&
-			deriveTeleportEqual_92(this.Request, that.Request) &&
+			deriveTeleportEqual_93(this.Request, that.Request) &&
 			deriveTeleportEqual_2(this.KubeUsers, that.KubeUsers) &&
-			deriveTeleportEqual_90(this.AppLabels, that.AppLabels) &&
-			deriveTeleportEqual_90(this.ClusterLabels, that.ClusterLabels) &&
-			deriveTeleportEqual_90(this.KubernetesLabels, that.KubernetesLabels) &&
-			deriveTeleportEqual_90(this.DatabaseLabels, that.DatabaseLabels) &&
+			deriveTeleportEqual_91(this.AppLabels, that.AppLabels) &&
+			deriveTeleportEqual_91(this.ClusterLabels, that.ClusterLabels) &&
+			deriveTeleportEqual_91(this.KubernetesLabels, that.KubernetesLabels) &&
+			deriveTeleportEqual_91(this.DatabaseLabels, that.DatabaseLabels) &&
 			deriveTeleportEqual_2(this.DatabaseNames, that.DatabaseNames) &&
 			deriveTeleportEqual_2(this.DatabaseUsers, that.DatabaseUsers) &&
-			deriveTeleportEqual_93(this.Impersonate, that.Impersonate) &&
-			deriveTeleportEqual_94(this.ReviewRequests, that.ReviewRequests) &&
+			deriveTeleportEqual_94(this.Impersonate, that.Impersonate) &&
+			deriveTeleportEqual_95(this.ReviewRequests, that.ReviewRequests) &&
 			deriveTeleportEqual_2(this.AWSRoleARNs, that.AWSRoleARNs) &&
 			deriveTeleportEqual_2(this.WindowsDesktopLogins, that.WindowsDesktopLogins) &&
-			deriveTeleportEqual_90(this.WindowsDesktopLabels, that.WindowsDesktopLabels) &&
-			deriveTeleportEqual_95(this.RequireSessionJoin, that.RequireSessionJoin) &&
-			deriveTeleportEqual_96(this.JoinSessions, that.JoinSessions) &&
+			deriveTeleportEqual_91(this.WindowsDesktopLabels, that.WindowsDesktopLabels) &&
+			deriveTeleportEqual_96(this.RequireSessionJoin, that.RequireSessionJoin) &&
+			deriveTeleportEqual_97(this.JoinSessions, that.JoinSessions) &&
 			deriveTeleportEqual_2(this.HostGroups, that.HostGroups) &&
 			deriveTeleportEqual_2(this.HostSudoers, that.HostSudoers) &&
 			deriveTeleportEqual_2(this.AzureIdentities, that.AzureIdentities) &&
-			deriveTeleportEqual_97(this.KubernetesResources, that.KubernetesResources) &&
+			deriveTeleportEqual_98(this.KubernetesResources, that.KubernetesResources) &&
 			deriveTeleportEqual_2(this.GCPServiceAccounts, that.GCPServiceAccounts) &&
-			deriveTeleportEqual_90(this.DatabaseServiceLabels, that.DatabaseServiceLabels) &&
-			deriveTeleportEqual_90(this.GroupLabels, that.GroupLabels) &&
+			deriveTeleportEqual_91(this.DatabaseServiceLabels, that.DatabaseServiceLabels) &&
+			deriveTeleportEqual_91(this.GroupLabels, that.GroupLabels) &&
 			deriveTeleportEqual_2(this.DesktopGroups, that.DesktopGroups) &&
 			deriveTeleportEqual_2(this.DatabaseRoles, that.DatabaseRoles) &&
 			this.NodeLabelsExpression == that.NodeLabelsExpression &&
@@ -1140,17 +1141,17 @@ func deriveTeleportEqual_59(this, that *RoleConditions) bool {
 			this.DatabaseServiceLabelsExpression == that.DatabaseServiceLabelsExpression &&
 			this.WindowsDesktopLabelsExpression == that.WindowsDesktopLabelsExpression &&
 			this.GroupLabelsExpression == that.GroupLabelsExpression &&
-			deriveTeleportEqual_98(this.DatabasePermissions, that.DatabasePermissions) &&
-			deriveTeleportEqual_99(this.SPIFFE, that.SPIFFE) &&
-			deriveTeleportEqual_100(this.AccountAssignments, that.AccountAssignments) &&
-			deriveTeleportEqual_101(this.GitHubPermissions, that.GitHubPermissions) &&
-			deriveTeleportEqual_90(this.WorkloadIdentityLabels, that.WorkloadIdentityLabels) &&
+			deriveTeleportEqual_99(this.DatabasePermissions, that.DatabasePermissions) &&
+			deriveTeleportEqual_100(this.SPIFFE, that.SPIFFE) &&
+			deriveTeleportEqual_101(this.AccountAssignments, that.AccountAssignments) &&
+			deriveTeleportEqual_102(this.GitHubPermissions, that.GitHubPermissions) &&
+			deriveTeleportEqual_91(this.WorkloadIdentityLabels, that.WorkloadIdentityLabels) &&
 			this.WorkloadIdentityLabelsExpression == that.WorkloadIdentityLabelsExpression &&
-			deriveTeleportEqual_102(this.MCP, that.MCP) &&
+			deriveTeleportEqual_103(this.MCP, that.MCP) &&
 			deriveTeleportEqual_2(this.LinuxDesktopLogins, that.LinuxDesktopLogins) &&
-			deriveTeleportEqual_90(this.LinuxDesktopLabels, that.LinuxDesktopLabels) &&
+			deriveTeleportEqual_91(this.LinuxDesktopLabels, that.LinuxDesktopLabels) &&
 			this.LinuxDesktopLabelsExpression == that.LinuxDesktopLabelsExpression &&
-			deriveTeleportEqual_90(this.BeamLabels, that.BeamLabels) &&
+			deriveTeleportEqual_91(this.BeamLabels, that.BeamLabels) &&
 			this.BeamLabelsExpression == that.BeamLabelsExpression
 }
 
@@ -1163,7 +1164,7 @@ func deriveTeleportEqual_60(this, that []AttributeMapping) bool {
 		return false
 	}
 	for i := 0; i < len(this); i++ {
-		if !(deriveTeleportEqual_103(&this[i], &that[i])) {
+		if !(deriveTeleportEqual_104(&this[i], &that[i])) {
 			return false
 		}
 	}
@@ -1209,7 +1210,14 @@ func deriveTeleportEqual_64(this, that *EntraIDGroupsProvider) bool {
 }
 
 // deriveTeleportEqual_65 returns whether this and that are equal.
-func deriveTeleportEqual_65(this, that []ExternalIdentity) bool {
+func deriveTeleportEqual_65(this, that *SAMLConnectorCredentials) bool {
+	return (this == nil && that == nil) ||
+		this != nil && that != nil &&
+			deriveTeleportEqual_105(this.Oauth, that.Oauth)
+}
+
+// deriveTeleportEqual_66 returns whether this and that are equal.
+func deriveTeleportEqual_66(this, that []ExternalIdentity) bool {
 	if this == nil || that == nil {
 		return this == nil && that == nil
 	}
@@ -1224,8 +1232,8 @@ func deriveTeleportEqual_65(this, that []ExternalIdentity) bool {
 	return true
 }
 
-// deriveTeleportEqual_66 returns whether this and that are equal.
-func deriveTeleportEqual_66(this, that *LoginStatus) bool {
+// deriveTeleportEqual_67 returns whether this and that are equal.
+func deriveTeleportEqual_67(this, that *LoginStatus) bool {
 	return (this == nil && that == nil) ||
 		this != nil && that != nil &&
 			this.IsLocked == that.IsLocked &&
@@ -1234,33 +1242,33 @@ func deriveTeleportEqual_66(this, that *LoginStatus) bool {
 			this.LockExpires.Equal(that.LockExpires)
 }
 
-// deriveTeleportEqual_67 returns whether this and that are equal.
-func deriveTeleportEqual_67(this, that *CreatedBy) bool {
+// deriveTeleportEqual_68 returns whether this and that are equal.
+func deriveTeleportEqual_68(this, that *CreatedBy) bool {
 	return (this == nil && that == nil) ||
 		this != nil && that != nil &&
-			deriveTeleportEqual_104(this.Connector, that.Connector) &&
+			deriveTeleportEqual_106(this.Connector, that.Connector) &&
 			this.Time.Equal(that.Time) &&
-			deriveTeleportEqual_105(&this.User, &that.User)
+			deriveTeleportEqual_107(&this.User, &that.User)
 }
 
-// deriveTeleportEqual_68 returns whether this and that are equal.
-func deriveTeleportEqual_68(this, that *LocalAuthSecrets) bool {
+// deriveTeleportEqual_69 returns whether this and that are equal.
+func deriveTeleportEqual_69(this, that *LocalAuthSecrets) bool {
 	return (this == nil && that == nil) ||
 		this != nil && that != nil &&
 			bytes.Equal(this.PasswordHash, that.PasswordHash) &&
 			this.TOTPKey == that.TOTPKey &&
-			deriveTeleportEqual_106(this.Webauthn, that.Webauthn)
-}
-
-// deriveTeleportEqual_69 returns whether this and that are equal.
-func deriveTeleportEqual_69(this, that *ThresholdIndexSets) bool {
-	return (this == nil && that == nil) ||
-		this != nil && that != nil &&
-			deriveTeleportEqual_107(this.Sets, that.Sets)
+			deriveTeleportEqual_108(this.Webauthn, that.Webauthn)
 }
 
 // deriveTeleportEqual_70 returns whether this and that are equal.
-func deriveTeleportEqual_70(this, that *AccessReview) bool {
+func deriveTeleportEqual_70(this, that *ThresholdIndexSets) bool {
+	return (this == nil && that == nil) ||
+		this != nil && that != nil &&
+			deriveTeleportEqual_109(this.Sets, that.Sets)
+}
+
+// deriveTeleportEqual_71 returns whether this and that are equal.
+func deriveTeleportEqual_71(this, that *AccessReview) bool {
 	return (this == nil && that == nil) ||
 		this != nil && that != nil &&
 			this.Author == that.Author &&
@@ -1269,13 +1277,13 @@ func deriveTeleportEqual_70(this, that *AccessReview) bool {
 			this.Reason == that.Reason &&
 			this.Created.Equal(that.Created) &&
 			deriveTeleportEqual_30(this.Annotations, that.Annotations) &&
-			deriveTeleportEqual_108(this.ThresholdIndexes, that.ThresholdIndexes) &&
+			deriveTeleportEqual_110(this.ThresholdIndexes, that.ThresholdIndexes) &&
 			deriveTeleportEqual_35(this.AccessList, that.AccessList) &&
 			((this.AssumeStartTime == nil && that.AssumeStartTime == nil) || (this.AssumeStartTime != nil && that.AssumeStartTime != nil && (*(this.AssumeStartTime)).Equal(*(that.AssumeStartTime))))
 }
 
-// deriveTeleportEqual_71 returns whether this and that are equal.
-func deriveTeleportEqual_71(this, that map[string]ResourceIDList) bool {
+// deriveTeleportEqual_72 returns whether this and that are equal.
+func deriveTeleportEqual_72(this, that map[string]ResourceIDList) bool {
 	if this == nil || that == nil {
 		return this == nil && that == nil
 	}
@@ -1287,15 +1295,15 @@ func deriveTeleportEqual_71(this, that map[string]ResourceIDList) bool {
 		if !ok {
 			return false
 		}
-		if !(deriveTeleportEqual_109(&v, &thatv)) {
+		if !(deriveTeleportEqual_111(&v, &thatv)) {
 			return false
 		}
 	}
 	return true
 }
 
-// deriveTeleportEqual_72 returns whether this and that are equal.
-func deriveTeleportEqual_72(this, that *CommandLabelV2) bool {
+// deriveTeleportEqual_73 returns whether this and that are equal.
+func deriveTeleportEqual_73(this, that *CommandLabelV2) bool {
 	return (this == nil && that == nil) ||
 		this != nil && that != nil &&
 			this.Period == that.Period &&
@@ -1303,105 +1311,8 @@ func deriveTeleportEqual_72(this, that *CommandLabelV2) bool {
 			this.Result == that.Result
 }
 
-// deriveTeleportEqual_73 returns whether this and that are equal.
-func deriveTeleportEqual_73(this, that []*Header) bool {
-	if this == nil || that == nil {
-		return this == nil && that == nil
-	}
-	if len(this) != len(that) {
-		return false
-	}
-	for i := 0; i < len(this); i++ {
-		if !(deriveTeleportEqual_110(this[i], that[i])) {
-			return false
-		}
-	}
-	return true
-}
-
 // deriveTeleportEqual_74 returns whether this and that are equal.
-func deriveTeleportEqual_74(this, that *AppAWSRolesAnywhereProfile) bool {
-	return (this == nil && that == nil) ||
-		this != nil && that != nil &&
-			this.ProfileARN == that.ProfileARN &&
-			this.AcceptRoleSessionName == that.AcceptRoleSessionName
-}
-
-// deriveTeleportEqual_75 returns whether this and that are equal.
-func deriveTeleportEqual_75(this, that []*IdentityCenterPermissionSet) bool {
-	if this == nil || that == nil {
-		return this == nil && that == nil
-	}
-	if len(this) != len(that) {
-		return false
-	}
-	for i := 0; i < len(this); i++ {
-		if !(deriveTeleportEqual_111(this[i], that[i])) {
-			return false
-		}
-	}
-	return true
-}
-
-// deriveTeleportEqual_76 returns whether this and that are equal.
-func deriveTeleportEqual_76(this, that *PortRange) bool {
-	return (this == nil && that == nil) ||
-		this != nil && that != nil &&
-			this.Port == that.Port &&
-			this.EndPort == that.EndPort
-}
-
-// deriveTeleportEqual_77 returns whether this and that are equal.
-func deriveTeleportEqual_77(this, that *RotationSchedule) bool {
-	return (this == nil && that == nil) ||
-		this != nil && that != nil &&
-			this.UpdateClients.Equal(that.UpdateClients) &&
-			this.UpdateServers.Equal(that.UpdateServers) &&
-			this.Standby.Equal(that.Standby)
-}
-
-// deriveTeleportEqual_78 returns whether this and that are equal.
-func deriveTeleportEqual_78(this, that []componentfeaturesv1.ComponentFeatureID) bool {
-	if this == nil || that == nil {
-		return this == nil && that == nil
-	}
-	if len(this) != len(that) {
-		return false
-	}
-	for i := 0; i < len(this); i++ {
-		if !(this[i] == that[i]) {
-			return false
-		}
-	}
-	return true
-}
-
-// deriveTeleportEqual_79 returns whether this and that are equal.
-func deriveTeleportEqual_79(this, that *RoleMapping) bool {
-	return (this == nil && that == nil) ||
-		this != nil && that != nil &&
-			this.Remote == that.Remote &&
-			deriveTeleportEqual_2(this.Local, that.Local)
-}
-
-// deriveTeleportEqual_80 returns whether this and that are equal.
-func deriveTeleportEqual_80(this, that []*SSHKeyPair) bool {
-	if this == nil || that == nil {
-		return this == nil && that == nil
-	}
-	if len(this) != len(that) {
-		return false
-	}
-	for i := 0; i < len(this); i++ {
-		if !(this[i].Equal(that[i])) {
-			return false
-		}
-	}
-	return true
-}
-
-// deriveTeleportEqual_81 returns whether this and that are equal.
-func deriveTeleportEqual_81(this, that []*TLSKeyPair) bool {
+func deriveTeleportEqual_74(this, that []*Header) bool {
 	if this == nil || that == nil {
 		return this == nil && that == nil
 	}
@@ -1416,8 +1327,16 @@ func deriveTeleportEqual_81(this, that []*TLSKeyPair) bool {
 	return true
 }
 
-// deriveTeleportEqual_82 returns whether this and that are equal.
-func deriveTeleportEqual_82(this, that []*JWTKeyPair) bool {
+// deriveTeleportEqual_75 returns whether this and that are equal.
+func deriveTeleportEqual_75(this, that *AppAWSRolesAnywhereProfile) bool {
+	return (this == nil && that == nil) ||
+		this != nil && that != nil &&
+			this.ProfileARN == that.ProfileARN &&
+			this.AcceptRoleSessionName == that.AcceptRoleSessionName
+}
+
+// deriveTeleportEqual_76 returns whether this and that are equal.
+func deriveTeleportEqual_76(this, that []*IdentityCenterPermissionSet) bool {
 	if this == nil || that == nil {
 		return this == nil && that == nil
 	}
@@ -1432,41 +1351,65 @@ func deriveTeleportEqual_82(this, that []*JWTKeyPair) bool {
 	return true
 }
 
-// deriveTeleportEqual_83 returns whether this and that are equal.
-func deriveTeleportEqual_83(this, that *AssumeRole) bool {
+// deriveTeleportEqual_77 returns whether this and that are equal.
+func deriveTeleportEqual_77(this, that *PortRange) bool {
 	return (this == nil && that == nil) ||
 		this != nil && that != nil &&
-			this.RoleARN == that.RoleARN &&
-			this.ExternalID == that.ExternalID &&
-			this.RoleName == that.RoleName
+			this.Port == that.Port &&
+			this.EndPort == that.EndPort
 }
 
-// deriveTeleportEqual_84 returns whether this and that are equal.
-func deriveTeleportEqual_84(this, that *OktaAssignmentTargetV1) bool {
+// deriveTeleportEqual_78 returns whether this and that are equal.
+func deriveTeleportEqual_78(this, that *RotationSchedule) bool {
 	return (this == nil && that == nil) ||
 		this != nil && that != nil &&
-			this.Type == that.Type &&
-			this.Id == that.Id
+			this.UpdateClients.Equal(that.UpdateClients) &&
+			this.UpdateServers.Equal(that.UpdateServers) &&
+			this.Standby.Equal(that.Standby)
 }
 
-// deriveTeleportEqual_85 returns whether this and that are equal.
-func deriveTeleportEqual_85(this, that *BoolOption) bool {
+// deriveTeleportEqual_79 returns whether this and that are equal.
+func deriveTeleportEqual_79(this, that []componentfeaturesv1.ComponentFeatureID) bool {
+	if this == nil || that == nil {
+		return this == nil && that == nil
+	}
+	if len(this) != len(that) {
+		return false
+	}
+	for i := 0; i < len(this); i++ {
+		if !(this[i] == that[i]) {
+			return false
+		}
+	}
+	return true
+}
+
+// deriveTeleportEqual_80 returns whether this and that are equal.
+func deriveTeleportEqual_80(this, that *RoleMapping) bool {
 	return (this == nil && that == nil) ||
 		this != nil && that != nil &&
-			this.Value == that.Value
+			this.Remote == that.Remote &&
+			deriveTeleportEqual_2(this.Local, that.Local)
 }
 
-// deriveTeleportEqual_86 returns whether this and that are equal.
-func deriveTeleportEqual_86(this, that *RecordSession) bool {
-	return (this == nil && that == nil) ||
-		this != nil && that != nil &&
-			deriveTeleportEqual_85(this.Desktop, that.Desktop) &&
-			this.Default == that.Default &&
-			this.SSH == that.SSH
+// deriveTeleportEqual_81 returns whether this and that are equal.
+func deriveTeleportEqual_81(this, that []*SSHKeyPair) bool {
+	if this == nil || that == nil {
+		return this == nil && that == nil
+	}
+	if len(this) != len(that) {
+		return false
+	}
+	for i := 0; i < len(this); i++ {
+		if !(this[i].Equal(that[i])) {
+			return false
+		}
+	}
+	return true
 }
 
-// deriveTeleportEqual_87 returns whether this and that are equal.
-func deriveTeleportEqual_87(this, that []*CertExtension) bool {
+// deriveTeleportEqual_82 returns whether this and that are equal.
+func deriveTeleportEqual_82(this, that []*TLSKeyPair) bool {
 	if this == nil || that == nil {
 		return this == nil && that == nil
 	}
@@ -1481,23 +1424,88 @@ func deriveTeleportEqual_87(this, that []*CertExtension) bool {
 	return true
 }
 
-// deriveTeleportEqual_88 returns whether this and that are equal.
-func deriveTeleportEqual_88(this, that *IdPOptions) bool {
+// deriveTeleportEqual_83 returns whether this and that are equal.
+func deriveTeleportEqual_83(this, that []*JWTKeyPair) bool {
+	if this == nil || that == nil {
+		return this == nil && that == nil
+	}
+	if len(this) != len(that) {
+		return false
+	}
+	for i := 0; i < len(this); i++ {
+		if !(deriveTeleportEqual_115(this[i], that[i])) {
+			return false
+		}
+	}
+	return true
+}
+
+// deriveTeleportEqual_84 returns whether this and that are equal.
+func deriveTeleportEqual_84(this, that *AssumeRole) bool {
 	return (this == nil && that == nil) ||
 		this != nil && that != nil &&
-			deriveTeleportEqual_115(this.SAML, that.SAML)
+			this.RoleARN == that.RoleARN &&
+			this.ExternalID == that.ExternalID &&
+			this.RoleName == that.RoleName
+}
+
+// deriveTeleportEqual_85 returns whether this and that are equal.
+func deriveTeleportEqual_85(this, that *OktaAssignmentTargetV1) bool {
+	return (this == nil && that == nil) ||
+		this != nil && that != nil &&
+			this.Type == that.Type &&
+			this.Id == that.Id
+}
+
+// deriveTeleportEqual_86 returns whether this and that are equal.
+func deriveTeleportEqual_86(this, that *BoolOption) bool {
+	return (this == nil && that == nil) ||
+		this != nil && that != nil &&
+			this.Value == that.Value
+}
+
+// deriveTeleportEqual_87 returns whether this and that are equal.
+func deriveTeleportEqual_87(this, that *RecordSession) bool {
+	return (this == nil && that == nil) ||
+		this != nil && that != nil &&
+			deriveTeleportEqual_86(this.Desktop, that.Desktop) &&
+			this.Default == that.Default &&
+			this.SSH == that.SSH
+}
+
+// deriveTeleportEqual_88 returns whether this and that are equal.
+func deriveTeleportEqual_88(this, that []*CertExtension) bool {
+	if this == nil || that == nil {
+		return this == nil && that == nil
+	}
+	if len(this) != len(that) {
+		return false
+	}
+	for i := 0; i < len(this); i++ {
+		if !(deriveTeleportEqual_116(this[i], that[i])) {
+			return false
+		}
+	}
+	return true
 }
 
 // deriveTeleportEqual_89 returns whether this and that are equal.
-func deriveTeleportEqual_89(this, that *SSHPortForwarding) bool {
+func deriveTeleportEqual_89(this, that *IdPOptions) bool {
 	return (this == nil && that == nil) ||
 		this != nil && that != nil &&
-			deriveTeleportEqual_116(this.Local, that.Local) &&
-			deriveTeleportEqual_117(this.Remote, that.Remote)
+			deriveTeleportEqual_117(this.SAML, that.SAML)
 }
 
 // deriveTeleportEqual_90 returns whether this and that are equal.
-func deriveTeleportEqual_90(this, that map[string]utils.Strings) bool {
+func deriveTeleportEqual_90(this, that *SSHPortForwarding) bool {
+	return (this == nil && that == nil) ||
+		this != nil && that != nil &&
+			deriveTeleportEqual_118(this.Local, that.Local) &&
+			deriveTeleportEqual_119(this.Remote, that.Remote)
+}
+
+// deriveTeleportEqual_91 returns whether this and that are equal.
+func deriveTeleportEqual_91(this, that map[string]utils.Strings) bool {
 	if this == nil || that == nil {
 		return this == nil && that == nil
 	}
@@ -1516,8 +1524,8 @@ func deriveTeleportEqual_90(this, that map[string]utils.Strings) bool {
 	return true
 }
 
-// deriveTeleportEqual_91 returns whether this and that are equal.
-func deriveTeleportEqual_91(this, that []Rule) bool {
+// deriveTeleportEqual_92 returns whether this and that are equal.
+func deriveTeleportEqual_92(this, that []Rule) bool {
 	if this == nil || that == nil {
 		return this == nil && that == nil
 	}
@@ -1525,30 +1533,30 @@ func deriveTeleportEqual_91(this, that []Rule) bool {
 		return false
 	}
 	for i := 0; i < len(this); i++ {
-		if !(deriveTeleportEqual_118(&this[i], &that[i])) {
+		if !(deriveTeleportEqual_120(&this[i], &that[i])) {
 			return false
 		}
 	}
 	return true
 }
 
-// deriveTeleportEqual_92 returns whether this and that are equal.
-func deriveTeleportEqual_92(this, that *AccessRequestConditions) bool {
+// deriveTeleportEqual_93 returns whether this and that are equal.
+func deriveTeleportEqual_93(this, that *AccessRequestConditions) bool {
 	return (this == nil && that == nil) ||
 		this != nil && that != nil &&
 			deriveTeleportEqual_2(this.Roles, that.Roles) &&
-			deriveTeleportEqual_119(this.ClaimsToRoles, that.ClaimsToRoles) &&
+			deriveTeleportEqual_121(this.ClaimsToRoles, that.ClaimsToRoles) &&
 			deriveTeleportEqual_30(this.Annotations, that.Annotations) &&
 			deriveTeleportEqual_31(this.Thresholds, that.Thresholds) &&
 			deriveTeleportEqual_2(this.SuggestedReviewers, that.SuggestedReviewers) &&
 			deriveTeleportEqual_2(this.SearchAsRoles, that.SearchAsRoles) &&
 			this.MaxDuration == that.MaxDuration &&
-			deriveTeleportEqual_120(this.KubernetesResources, that.KubernetesResources) &&
-			deriveTeleportEqual_121(this.Reason, that.Reason)
+			deriveTeleportEqual_122(this.KubernetesResources, that.KubernetesResources) &&
+			deriveTeleportEqual_123(this.Reason, that.Reason)
 }
 
-// deriveTeleportEqual_93 returns whether this and that are equal.
-func deriveTeleportEqual_93(this, that *ImpersonateConditions) bool {
+// deriveTeleportEqual_94 returns whether this and that are equal.
+func deriveTeleportEqual_94(this, that *ImpersonateConditions) bool {
 	return (this == nil && that == nil) ||
 		this != nil && that != nil &&
 			deriveTeleportEqual_2(this.Users, that.Users) &&
@@ -1556,34 +1564,18 @@ func deriveTeleportEqual_93(this, that *ImpersonateConditions) bool {
 			this.Where == that.Where
 }
 
-// deriveTeleportEqual_94 returns whether this and that are equal.
-func deriveTeleportEqual_94(this, that *AccessReviewConditions) bool {
+// deriveTeleportEqual_95 returns whether this and that are equal.
+func deriveTeleportEqual_95(this, that *AccessReviewConditions) bool {
 	return (this == nil && that == nil) ||
 		this != nil && that != nil &&
 			deriveTeleportEqual_2(this.Roles, that.Roles) &&
-			deriveTeleportEqual_119(this.ClaimsToRoles, that.ClaimsToRoles) &&
+			deriveTeleportEqual_121(this.ClaimsToRoles, that.ClaimsToRoles) &&
 			this.Where == that.Where &&
 			deriveTeleportEqual_2(this.PreviewAsRoles, that.PreviewAsRoles)
 }
 
-// deriveTeleportEqual_95 returns whether this and that are equal.
-func deriveTeleportEqual_95(this, that []*SessionRequirePolicy) bool {
-	if this == nil || that == nil {
-		return this == nil && that == nil
-	}
-	if len(this) != len(that) {
-		return false
-	}
-	for i := 0; i < len(this); i++ {
-		if !(deriveTeleportEqual_122(this[i], that[i])) {
-			return false
-		}
-	}
-	return true
-}
-
 // deriveTeleportEqual_96 returns whether this and that are equal.
-func deriveTeleportEqual_96(this, that []*SessionJoinPolicy) bool {
+func deriveTeleportEqual_96(this, that []*SessionRequirePolicy) bool {
 	if this == nil || that == nil {
 		return this == nil && that == nil
 	}
@@ -1591,7 +1583,7 @@ func deriveTeleportEqual_96(this, that []*SessionJoinPolicy) bool {
 		return false
 	}
 	for i := 0; i < len(this); i++ {
-		if !(deriveTeleportEqual_123(this[i], that[i])) {
+		if !(deriveTeleportEqual_124(this[i], that[i])) {
 			return false
 		}
 	}
@@ -1599,7 +1591,7 @@ func deriveTeleportEqual_96(this, that []*SessionJoinPolicy) bool {
 }
 
 // deriveTeleportEqual_97 returns whether this and that are equal.
-func deriveTeleportEqual_97(this, that []KubernetesResource) bool {
+func deriveTeleportEqual_97(this, that []*SessionJoinPolicy) bool {
 	if this == nil || that == nil {
 		return this == nil && that == nil
 	}
@@ -1607,7 +1599,7 @@ func deriveTeleportEqual_97(this, that []KubernetesResource) bool {
 		return false
 	}
 	for i := 0; i < len(this); i++ {
-		if !(deriveTeleportEqual_124(&this[i], &that[i])) {
+		if !(deriveTeleportEqual_125(this[i], that[i])) {
 			return false
 		}
 	}
@@ -1615,7 +1607,7 @@ func deriveTeleportEqual_97(this, that []KubernetesResource) bool {
 }
 
 // deriveTeleportEqual_98 returns whether this and that are equal.
-func deriveTeleportEqual_98(this, that []DatabasePermission) bool {
+func deriveTeleportEqual_98(this, that []KubernetesResource) bool {
 	if this == nil || that == nil {
 		return this == nil && that == nil
 	}
@@ -1623,7 +1615,7 @@ func deriveTeleportEqual_98(this, that []DatabasePermission) bool {
 		return false
 	}
 	for i := 0; i < len(this); i++ {
-		if !(deriveTeleportEqual_125(&this[i], &that[i])) {
+		if !(deriveTeleportEqual_126(&this[i], &that[i])) {
 			return false
 		}
 	}
@@ -1631,23 +1623,7 @@ func deriveTeleportEqual_98(this, that []DatabasePermission) bool {
 }
 
 // deriveTeleportEqual_99 returns whether this and that are equal.
-func deriveTeleportEqual_99(this, that []*SPIFFERoleCondition) bool {
-	if this == nil || that == nil {
-		return this == nil && that == nil
-	}
-	if len(this) != len(that) {
-		return false
-	}
-	for i := 0; i < len(this); i++ {
-		if !(deriveTeleportEqual_126(this[i], that[i])) {
-			return false
-		}
-	}
-	return true
-}
-
-// deriveTeleportEqual_100 returns whether this and that are equal.
-func deriveTeleportEqual_100(this, that []IdentityCenterAccountAssignment) bool {
+func deriveTeleportEqual_99(this, that []DatabasePermission) bool {
 	if this == nil || that == nil {
 		return this == nil && that == nil
 	}
@@ -1662,8 +1638,8 @@ func deriveTeleportEqual_100(this, that []IdentityCenterAccountAssignment) bool 
 	return true
 }
 
-// deriveTeleportEqual_101 returns whether this and that are equal.
-func deriveTeleportEqual_101(this, that []GitHubPermission) bool {
+// deriveTeleportEqual_100 returns whether this and that are equal.
+func deriveTeleportEqual_100(this, that []*SPIFFERoleCondition) bool {
 	if this == nil || that == nil {
 		return this == nil && that == nil
 	}
@@ -1671,54 +1647,15 @@ func deriveTeleportEqual_101(this, that []GitHubPermission) bool {
 		return false
 	}
 	for i := 0; i < len(this); i++ {
-		if !(deriveTeleportEqual_128(&this[i], &that[i])) {
+		if !(deriveTeleportEqual_128(this[i], that[i])) {
 			return false
 		}
 	}
 	return true
 }
 
-// deriveTeleportEqual_102 returns whether this and that are equal.
-func deriveTeleportEqual_102(this, that *MCPPermissions) bool {
-	return (this == nil && that == nil) ||
-		this != nil && that != nil &&
-			deriveTeleportEqual_2(this.Tools, that.Tools)
-}
-
-// deriveTeleportEqual_103 returns whether this and that are equal.
-func deriveTeleportEqual_103(this, that *AttributeMapping) bool {
-	return (this == nil && that == nil) ||
-		this != nil && that != nil &&
-			this.Name == that.Name &&
-			this.Value == that.Value &&
-			deriveTeleportEqual_2(this.Roles, that.Roles)
-}
-
-// deriveTeleportEqual_104 returns whether this and that are equal.
-func deriveTeleportEqual_104(this, that *ConnectorRef) bool {
-	return (this == nil && that == nil) ||
-		this != nil && that != nil &&
-			this.Type == that.Type &&
-			this.ID == that.ID &&
-			this.Identity == that.Identity
-}
-
-// deriveTeleportEqual_105 returns whether this and that are equal.
-func deriveTeleportEqual_105(this, that *UserRef) bool {
-	return (this == nil && that == nil) ||
-		this != nil && that != nil &&
-			this.Name == that.Name
-}
-
-// deriveTeleportEqual_106 returns whether this and that are equal.
-func deriveTeleportEqual_106(this, that *WebauthnLocalAuth) bool {
-	return (this == nil && that == nil) ||
-		this != nil && that != nil &&
-			bytes.Equal(this.UserID, that.UserID)
-}
-
-// deriveTeleportEqual_107 returns whether this and that are equal.
-func deriveTeleportEqual_107(this, that []ThresholdIndexSet) bool {
+// deriveTeleportEqual_101 returns whether this and that are equal.
+func deriveTeleportEqual_101(this, that []IdentityCenterAccountAssignment) bool {
 	if this == nil || that == nil {
 		return this == nil && that == nil
 	}
@@ -1733,108 +1670,8 @@ func deriveTeleportEqual_107(this, that []ThresholdIndexSet) bool {
 	return true
 }
 
-// deriveTeleportEqual_108 returns whether this and that are equal.
-func deriveTeleportEqual_108(this, that []uint32) bool {
-	if this == nil || that == nil {
-		return this == nil && that == nil
-	}
-	if len(this) != len(that) {
-		return false
-	}
-	for i := 0; i < len(this); i++ {
-		if !(this[i] == that[i]) {
-			return false
-		}
-	}
-	return true
-}
-
-// deriveTeleportEqual_109 returns whether this and that are equal.
-func deriveTeleportEqual_109(this, that *ResourceIDList) bool {
-	return (this == nil && that == nil) ||
-		this != nil && that != nil &&
-			deriveTeleportEqual_34(this.ResourceIds, that.ResourceIds)
-}
-
-// deriveTeleportEqual_110 returns whether this and that are equal.
-func deriveTeleportEqual_110(this, that *Header) bool {
-	return (this == nil && that == nil) ||
-		this != nil && that != nil &&
-			this.Name == that.Name &&
-			this.Value == that.Value
-}
-
-// deriveTeleportEqual_111 returns whether this and that are equal.
-func deriveTeleportEqual_111(this, that *IdentityCenterPermissionSet) bool {
-	return (this == nil && that == nil) ||
-		this != nil && that != nil &&
-			this.ARN == that.ARN &&
-			this.Name == that.Name &&
-			this.AssignmentID == that.AssignmentID
-}
-
-// deriveTeleportEqual_112 returns whether this and that are equal.
-func deriveTeleportEqual_112(this, that *TLSKeyPair) bool {
-	return (this == nil && that == nil) ||
-		this != nil && that != nil &&
-			bytes.Equal(this.Cert, that.Cert) &&
-			bytes.Equal(this.Key, that.Key) &&
-			this.KeyType == that.KeyType &&
-			bytes.Equal(this.CRL, that.CRL)
-}
-
-// deriveTeleportEqual_113 returns whether this and that are equal.
-func deriveTeleportEqual_113(this, that *JWTKeyPair) bool {
-	return (this == nil && that == nil) ||
-		this != nil && that != nil &&
-			bytes.Equal(this.PublicKey, that.PublicKey) &&
-			bytes.Equal(this.PrivateKey, that.PrivateKey) &&
-			this.PrivateKeyType == that.PrivateKeyType
-}
-
-// deriveTeleportEqual_114 returns whether this and that are equal.
-func deriveTeleportEqual_114(this, that *CertExtension) bool {
-	return (this == nil && that == nil) ||
-		this != nil && that != nil &&
-			this.Type == that.Type &&
-			this.Mode == that.Mode &&
-			this.Name == that.Name &&
-			this.Value == that.Value
-}
-
-// deriveTeleportEqual_115 returns whether this and that are equal.
-func deriveTeleportEqual_115(this, that *IdPSAMLOptions) bool {
-	return (this == nil && that == nil) ||
-		this != nil && that != nil &&
-			deriveTeleportEqual_85(this.Enabled, that.Enabled)
-}
-
-// deriveTeleportEqual_116 returns whether this and that are equal.
-func deriveTeleportEqual_116(this, that *SSHLocalPortForwarding) bool {
-	return (this == nil && that == nil) ||
-		this != nil && that != nil &&
-			deriveTeleportEqual_85(this.Enabled, that.Enabled)
-}
-
-// deriveTeleportEqual_117 returns whether this and that are equal.
-func deriveTeleportEqual_117(this, that *SSHRemotePortForwarding) bool {
-	return (this == nil && that == nil) ||
-		this != nil && that != nil &&
-			deriveTeleportEqual_85(this.Enabled, that.Enabled)
-}
-
-// deriveTeleportEqual_118 returns whether this and that are equal.
-func deriveTeleportEqual_118(this, that *Rule) bool {
-	return (this == nil && that == nil) ||
-		this != nil && that != nil &&
-			deriveTeleportEqual_2(this.Resources, that.Resources) &&
-			deriveTeleportEqual_2(this.Verbs, that.Verbs) &&
-			this.Where == that.Where &&
-			deriveTeleportEqual_2(this.Actions, that.Actions)
-}
-
-// deriveTeleportEqual_119 returns whether this and that are equal.
-func deriveTeleportEqual_119(this, that []ClaimMapping) bool {
+// deriveTeleportEqual_102 returns whether this and that are equal.
+func deriveTeleportEqual_102(this, that []GitHubPermission) bool {
 	if this == nil || that == nil {
 		return this == nil && that == nil
 	}
@@ -1849,8 +1686,55 @@ func deriveTeleportEqual_119(this, that []ClaimMapping) bool {
 	return true
 }
 
-// deriveTeleportEqual_120 returns whether this and that are equal.
-func deriveTeleportEqual_120(this, that []RequestKubernetesResource) bool {
+// deriveTeleportEqual_103 returns whether this and that are equal.
+func deriveTeleportEqual_103(this, that *MCPPermissions) bool {
+	return (this == nil && that == nil) ||
+		this != nil && that != nil &&
+			deriveTeleportEqual_2(this.Tools, that.Tools)
+}
+
+// deriveTeleportEqual_104 returns whether this and that are equal.
+func deriveTeleportEqual_104(this, that *AttributeMapping) bool {
+	return (this == nil && that == nil) ||
+		this != nil && that != nil &&
+			this.Name == that.Name &&
+			this.Value == that.Value &&
+			deriveTeleportEqual_2(this.Roles, that.Roles)
+}
+
+// deriveTeleportEqual_105 returns whether this and that are equal.
+func deriveTeleportEqual_105(this, that *OAuthClientCredentials) bool {
+	return (this == nil && that == nil) ||
+		this != nil && that != nil &&
+			this.ClientId == that.ClientId &&
+			this.ClientSecret == that.ClientSecret
+}
+
+// deriveTeleportEqual_106 returns whether this and that are equal.
+func deriveTeleportEqual_106(this, that *ConnectorRef) bool {
+	return (this == nil && that == nil) ||
+		this != nil && that != nil &&
+			this.Type == that.Type &&
+			this.ID == that.ID &&
+			this.Identity == that.Identity
+}
+
+// deriveTeleportEqual_107 returns whether this and that are equal.
+func deriveTeleportEqual_107(this, that *UserRef) bool {
+	return (this == nil && that == nil) ||
+		this != nil && that != nil &&
+			this.Name == that.Name
+}
+
+// deriveTeleportEqual_108 returns whether this and that are equal.
+func deriveTeleportEqual_108(this, that *WebauthnLocalAuth) bool {
+	return (this == nil && that == nil) ||
+		this != nil && that != nil &&
+			bytes.Equal(this.UserID, that.UserID)
+}
+
+// deriveTeleportEqual_109 returns whether this and that are equal.
+func deriveTeleportEqual_109(this, that []ThresholdIndexSet) bool {
 	if this == nil || that == nil {
 		return this == nil && that == nil
 	}
@@ -1865,16 +1749,148 @@ func deriveTeleportEqual_120(this, that []RequestKubernetesResource) bool {
 	return true
 }
 
+// deriveTeleportEqual_110 returns whether this and that are equal.
+func deriveTeleportEqual_110(this, that []uint32) bool {
+	if this == nil || that == nil {
+		return this == nil && that == nil
+	}
+	if len(this) != len(that) {
+		return false
+	}
+	for i := 0; i < len(this); i++ {
+		if !(this[i] == that[i]) {
+			return false
+		}
+	}
+	return true
+}
+
+// deriveTeleportEqual_111 returns whether this and that are equal.
+func deriveTeleportEqual_111(this, that *ResourceIDList) bool {
+	return (this == nil && that == nil) ||
+		this != nil && that != nil &&
+			deriveTeleportEqual_34(this.ResourceIds, that.ResourceIds)
+}
+
+// deriveTeleportEqual_112 returns whether this and that are equal.
+func deriveTeleportEqual_112(this, that *Header) bool {
+	return (this == nil && that == nil) ||
+		this != nil && that != nil &&
+			this.Name == that.Name &&
+			this.Value == that.Value
+}
+
+// deriveTeleportEqual_113 returns whether this and that are equal.
+func deriveTeleportEqual_113(this, that *IdentityCenterPermissionSet) bool {
+	return (this == nil && that == nil) ||
+		this != nil && that != nil &&
+			this.ARN == that.ARN &&
+			this.Name == that.Name &&
+			this.AssignmentID == that.AssignmentID
+}
+
+// deriveTeleportEqual_114 returns whether this and that are equal.
+func deriveTeleportEqual_114(this, that *TLSKeyPair) bool {
+	return (this == nil && that == nil) ||
+		this != nil && that != nil &&
+			bytes.Equal(this.Cert, that.Cert) &&
+			bytes.Equal(this.Key, that.Key) &&
+			this.KeyType == that.KeyType &&
+			bytes.Equal(this.CRL, that.CRL)
+}
+
+// deriveTeleportEqual_115 returns whether this and that are equal.
+func deriveTeleportEqual_115(this, that *JWTKeyPair) bool {
+	return (this == nil && that == nil) ||
+		this != nil && that != nil &&
+			bytes.Equal(this.PublicKey, that.PublicKey) &&
+			bytes.Equal(this.PrivateKey, that.PrivateKey) &&
+			this.PrivateKeyType == that.PrivateKeyType
+}
+
+// deriveTeleportEqual_116 returns whether this and that are equal.
+func deriveTeleportEqual_116(this, that *CertExtension) bool {
+	return (this == nil && that == nil) ||
+		this != nil && that != nil &&
+			this.Type == that.Type &&
+			this.Mode == that.Mode &&
+			this.Name == that.Name &&
+			this.Value == that.Value
+}
+
+// deriveTeleportEqual_117 returns whether this and that are equal.
+func deriveTeleportEqual_117(this, that *IdPSAMLOptions) bool {
+	return (this == nil && that == nil) ||
+		this != nil && that != nil &&
+			deriveTeleportEqual_86(this.Enabled, that.Enabled)
+}
+
+// deriveTeleportEqual_118 returns whether this and that are equal.
+func deriveTeleportEqual_118(this, that *SSHLocalPortForwarding) bool {
+	return (this == nil && that == nil) ||
+		this != nil && that != nil &&
+			deriveTeleportEqual_86(this.Enabled, that.Enabled)
+}
+
+// deriveTeleportEqual_119 returns whether this and that are equal.
+func deriveTeleportEqual_119(this, that *SSHRemotePortForwarding) bool {
+	return (this == nil && that == nil) ||
+		this != nil && that != nil &&
+			deriveTeleportEqual_86(this.Enabled, that.Enabled)
+}
+
+// deriveTeleportEqual_120 returns whether this and that are equal.
+func deriveTeleportEqual_120(this, that *Rule) bool {
+	return (this == nil && that == nil) ||
+		this != nil && that != nil &&
+			deriveTeleportEqual_2(this.Resources, that.Resources) &&
+			deriveTeleportEqual_2(this.Verbs, that.Verbs) &&
+			this.Where == that.Where &&
+			deriveTeleportEqual_2(this.Actions, that.Actions)
+}
+
 // deriveTeleportEqual_121 returns whether this and that are equal.
-func deriveTeleportEqual_121(this, that *AccessRequestConditionsReason) bool {
+func deriveTeleportEqual_121(this, that []ClaimMapping) bool {
+	if this == nil || that == nil {
+		return this == nil && that == nil
+	}
+	if len(this) != len(that) {
+		return false
+	}
+	for i := 0; i < len(this); i++ {
+		if !(deriveTeleportEqual_132(&this[i], &that[i])) {
+			return false
+		}
+	}
+	return true
+}
+
+// deriveTeleportEqual_122 returns whether this and that are equal.
+func deriveTeleportEqual_122(this, that []RequestKubernetesResource) bool {
+	if this == nil || that == nil {
+		return this == nil && that == nil
+	}
+	if len(this) != len(that) {
+		return false
+	}
+	for i := 0; i < len(this); i++ {
+		if !(deriveTeleportEqual_133(&this[i], &that[i])) {
+			return false
+		}
+	}
+	return true
+}
+
+// deriveTeleportEqual_123 returns whether this and that are equal.
+func deriveTeleportEqual_123(this, that *AccessRequestConditionsReason) bool {
 	return (this == nil && that == nil) ||
 		this != nil && that != nil &&
 			this.Mode == that.Mode &&
 			this.Prompt == that.Prompt
 }
 
-// deriveTeleportEqual_122 returns whether this and that are equal.
-func deriveTeleportEqual_122(this, that *SessionRequirePolicy) bool {
+// deriveTeleportEqual_124 returns whether this and that are equal.
+func deriveTeleportEqual_124(this, that *SessionRequirePolicy) bool {
 	return (this == nil && that == nil) ||
 		this != nil && that != nil &&
 			this.Name == that.Name &&
@@ -1885,8 +1901,8 @@ func deriveTeleportEqual_122(this, that *SessionRequirePolicy) bool {
 			this.OnLeave == that.OnLeave
 }
 
-// deriveTeleportEqual_123 returns whether this and that are equal.
-func deriveTeleportEqual_123(this, that *SessionJoinPolicy) bool {
+// deriveTeleportEqual_125 returns whether this and that are equal.
+func deriveTeleportEqual_125(this, that *SessionJoinPolicy) bool {
 	return (this == nil && that == nil) ||
 		this != nil && that != nil &&
 			this.Name == that.Name &&
@@ -1895,8 +1911,8 @@ func deriveTeleportEqual_123(this, that *SessionJoinPolicy) bool {
 			deriveTeleportEqual_2(this.Modes, that.Modes)
 }
 
-// deriveTeleportEqual_124 returns whether this and that are equal.
-func deriveTeleportEqual_124(this, that *KubernetesResource) bool {
+// deriveTeleportEqual_126 returns whether this and that are equal.
+func deriveTeleportEqual_126(this, that *KubernetesResource) bool {
 	return (this == nil && that == nil) ||
 		this != nil && that != nil &&
 			this.Kind == that.Kind &&
@@ -1906,16 +1922,16 @@ func deriveTeleportEqual_124(this, that *KubernetesResource) bool {
 			this.APIGroup == that.APIGroup
 }
 
-// deriveTeleportEqual_125 returns whether this and that are equal.
-func deriveTeleportEqual_125(this, that *DatabasePermission) bool {
+// deriveTeleportEqual_127 returns whether this and that are equal.
+func deriveTeleportEqual_127(this, that *DatabasePermission) bool {
 	return (this == nil && that == nil) ||
 		this != nil && that != nil &&
 			deriveTeleportEqual_2(this.Permissions, that.Permissions) &&
-			deriveTeleportEqual_90(this.Match, that.Match)
+			deriveTeleportEqual_91(this.Match, that.Match)
 }
 
-// deriveTeleportEqual_126 returns whether this and that are equal.
-func deriveTeleportEqual_126(this, that *SPIFFERoleCondition) bool {
+// deriveTeleportEqual_128 returns whether this and that are equal.
+func deriveTeleportEqual_128(this, that *SPIFFERoleCondition) bool {
 	return (this == nil && that == nil) ||
 		this != nil && that != nil &&
 			this.Path == that.Path &&
@@ -1923,30 +1939,30 @@ func deriveTeleportEqual_126(this, that *SPIFFERoleCondition) bool {
 			deriveTeleportEqual_2(this.IPSANs, that.IPSANs)
 }
 
-// deriveTeleportEqual_127 returns whether this and that are equal.
-func deriveTeleportEqual_127(this, that *IdentityCenterAccountAssignment) bool {
+// deriveTeleportEqual_129 returns whether this and that are equal.
+func deriveTeleportEqual_129(this, that *IdentityCenterAccountAssignment) bool {
 	return (this == nil && that == nil) ||
 		this != nil && that != nil &&
 			this.PermissionSet == that.PermissionSet &&
 			this.Account == that.Account
 }
 
-// deriveTeleportEqual_128 returns whether this and that are equal.
-func deriveTeleportEqual_128(this, that *GitHubPermission) bool {
+// deriveTeleportEqual_130 returns whether this and that are equal.
+func deriveTeleportEqual_130(this, that *GitHubPermission) bool {
 	return (this == nil && that == nil) ||
 		this != nil && that != nil &&
 			deriveTeleportEqual_2(this.Organizations, that.Organizations)
 }
 
-// deriveTeleportEqual_129 returns whether this and that are equal.
-func deriveTeleportEqual_129(this, that *ThresholdIndexSet) bool {
+// deriveTeleportEqual_131 returns whether this and that are equal.
+func deriveTeleportEqual_131(this, that *ThresholdIndexSet) bool {
 	return (this == nil && that == nil) ||
 		this != nil && that != nil &&
-			deriveTeleportEqual_108(this.Indexes, that.Indexes)
+			deriveTeleportEqual_110(this.Indexes, that.Indexes)
 }
 
-// deriveTeleportEqual_130 returns whether this and that are equal.
-func deriveTeleportEqual_130(this, that *ClaimMapping) bool {
+// deriveTeleportEqual_132 returns whether this and that are equal.
+func deriveTeleportEqual_132(this, that *ClaimMapping) bool {
 	return (this == nil && that == nil) ||
 		this != nil && that != nil &&
 			this.Claim == that.Claim &&
@@ -1954,8 +1970,8 @@ func deriveTeleportEqual_130(this, that *ClaimMapping) bool {
 			deriveTeleportEqual_2(this.Roles, that.Roles)
 }
 
-// deriveTeleportEqual_131 returns whether this and that are equal.
-func deriveTeleportEqual_131(this, that *RequestKubernetesResource) bool {
+// deriveTeleportEqual_133 returns whether this and that are equal.
+func deriveTeleportEqual_133(this, that *RequestKubernetesResource) bool {
 	return (this == nil && that == nil) ||
 		this != nil && that != nil &&
 			this.Kind == that.Kind &&
